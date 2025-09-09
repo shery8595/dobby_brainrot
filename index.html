@@ -1052,7 +1052,7 @@
             }
         }
 
-        async function getAssemblyAIWordTimestamps(audioBlob) {
+       async function getAssemblyAIWordTimestamps(audioBlob) {
     try {
         const formData = new FormData();
         formData.append('audio', audioBlob, 'audio.wav');
@@ -1075,38 +1075,39 @@
     }
 }
 
-        function createSubtitleSegments(kidQuestion, rickResponse, kidUnderstanding) {
-            const segments = [];
-            let currentTime = 0;
-            
-            // Kid question segment
-            const kidDuration = estimateDuration(kidQuestion);
-            segments.push({
-                text: kidQuestion,
-                start: currentTime,
-                end: currentTime + kidDuration
-            });
-            currentTime += kidDuration + 1.0; // Add gap after kid question
-            
-            // Rick response segment
-            const rickDuration = estimateDuration(rickResponse);
-            segments.push({
-                text: rickResponse,
-                start: currentTime,
-                end: currentTime + rickDuration
-            });
-            currentTime += rickDuration + 0.8; // Add gap after Rick's response
-            
-            // Kid understanding segment
-            const understandingDuration = estimateDuration(kidUnderstanding);
-            segments.push({
-                text: kidUnderstanding,
-                start: currentTime,
-                end: currentTime + understandingDuration
-            });
-            
-            return segments;
-        }
+        
+function createSubtitleSegments(kidQuestion, rickResponse, kidUnderstanding) {
+    const segments = [];
+    let currentTime = 0;
+    
+    // Kid question segment
+    const kidDuration = estimateDuration(kidQuestion);
+    segments.push({
+        text: kidQuestion,
+        start: currentTime,
+        end: currentTime + kidDuration
+    });
+    currentTime += kidDuration + 1.0; // Add gap after kid question
+    
+    // Rick response segment
+    const rickDuration = estimateDuration(rickResponse);
+    segments.push({
+        text: rickResponse,
+        start: currentTime,
+        end: currentTime + rickDuration
+    });
+    currentTime += rickDuration + 0.8; // Add gap after Rick's response
+    
+    // Kid understanding segment
+    const understandingDuration = estimateDuration(kidUnderstanding);
+    segments.push({
+        text: kidUnderstanding,
+        start: currentTime,
+        end: currentTime + understandingDuration
+    });
+    
+    return segments;
+}
 
         function estimateDuration(text) {
             // Estimate speech duration based on word count (average 0.5 seconds per word)
@@ -1191,90 +1192,80 @@
         }
 
        function startSubtitles(audio) {
-    currentSubtitleIndex = 0;
     clearInterval(subtitleInterval);
     
-    const useWordTiming = wordTimestamps && wordTimestamps.length > 0;
+    // Create word-level timestamps if we don't have them
+    if (wordTimestamps.length === 0) {
+        wordTimestamps = createWordTimestampsFromText(
+            kidQuestion + " " + rickResponse + " " + kidUnderstanding
+        );
+    }
+           function createWordTimestampsFromText(text) {
+    const words = text.split(/\s+/);
+    const wordTimestamps = [];
+    let currentTime = 0;
+    const wordDuration = 500; // ms per word
+    
+    for (const word of words) {
+        if (word.trim()) {
+            wordTimestamps.push({
+                text: word,
+                start: currentTime,
+                end: currentTime + wordDuration
+            });
+            currentTime += wordDuration;
+        }
+    }
+    
+    return wordTimestamps;
+}
     
     subtitleInterval = setInterval(() => {
-        const currentTime = audio.currentTime;
-        const currentTimeMs = Math.floor(currentTime * 1000);
+        const currentTime = audio.currentTime * 1000; // convert to ms
+        const currentWords = [];
         
-        if (useWordTiming) {
-            // Find the current word being spoken
-            let currentWord = null;
-            let upcomingWords = [];
-            let recentWords = [];
-            
-            for (let i = 0; i < wordTimestamps.length; i++) {
-                const word = wordTimestamps[i];
-                
-                if (currentTimeMs >= word.start && currentTimeMs <= word.end) {
-                    currentWord = word;
-                    // Get a few words before and after
-                    recentWords = wordTimestamps.slice(Math.max(0, i - 2), i);
-                    upcomingWords = wordTimestamps.slice(i + 1, Math.min(i + 4, wordTimestamps.length));
-                    break;
-                }
+        // Find all words that should be visible now
+        for (let i = 0; i < wordTimestamps.length; i++) {
+            const word = wordTimestamps[i];
+            if (currentTime >= word.start && currentTime <= word.end) {
+                currentWords.push({
+                    ...word,
+                    state: 'current'
+                });
+            } else if (currentTime > word.end) {
+                currentWords.push({
+                    ...word,
+                    state: 'past'
+                });
+            } else if (currentTime < word.start) {
+                currentWords.push({
+                    ...word,
+                    state: 'future'
+                });
             }
-            
-            // If no current word, check if we're between words
-            if (!currentWord) {
-                for (let i = 0; i < wordTimestamps.length - 1; i++) {
-                    if (currentTimeMs > wordTimestamps[i].end && 
-                        currentTimeMs < wordTimestamps[i + 1].start) {
-                        // We're between words, show the last word and next word
-                        recentWords = [wordTimestamps[i]];
-                        upcomingWords = [wordTimestamps[i + 1]];
-                        break;
-                    }
-                }
-            }
-            
-            // Build the display text
-            let displayHTML = '';
-            
-            // Add recent words (faded)
-            recentWords.forEach(word => {
-                displayHTML += `<span class="subtitle-word past">${word.text}</span> `;
-            });
-            
-            // Add current word (highlighted)
-            if (currentWord) {
-                const colorIndex = wordTimestamps.indexOf(currentWord) % 3;
-                const colorClass = ['hl-red', 'hl-yellow', 'hl-green'][colorIndex];
-                displayHTML += `<span class="subtitle-word current ${colorClass}">${currentWord.text}</span> `;
-            }
-            
-            // Add upcoming words (faded)
-            upcomingWords.forEach(word => {
-                displayHTML += `<span class="subtitle-word future">${word.text}</span> `;
-            });
-            
-            // Update the subtitle element
-            if (displayHTML.trim()) {
-                subtitles.innerHTML = displayHTML;
-                subtitles.style.display = 'block';
-            } else {
-                subtitles.style.display = 'none';
-            }
+        }
+        
+        // Only show a window of words around the current position
+        const visibleWords = getVisibleWordWindow(currentWords);
+
+function getVisibleWordWindow(words) {
+    const currentIndex = words.findIndex(word => word.state === 'current');
+    if (currentIndex === -1) return [];
+    
+    const start = Math.max(0, currentIndex - 2);
+    const end = Math.min(words.length, currentIndex + 3);
+    return words.slice(start, end);
+}
+
+        
+        // Update the subtitle element
+        if (visibleWords.length > 0) {
+            subtitles.innerHTML = visibleWords.map(word => 
+                `<span class="subtitle-word ${word.state}">${word.text}</span>`
+            ).join(' ');
+            subtitles.style.display = 'block';
         } else {
-            // Fallback to sentence-based subtitles
-            if (currentSubtitleIndex >= subtitleSegments.length) {
-                subtitles.style.display = 'none';
-                return;
-            }
-            
-            const currentSegment = subtitleSegments[currentSubtitleIndex];
-            if (currentTime >= currentSegment.start && currentTime <= currentSegment.end) {
-                subtitles.textContent = currentSegment.text;
-                subtitles.style.display = 'block';
-            } else if (currentTime > currentSegment.end) {
-                currentSubtitleIndex++;
-                subtitles.style.display = 'none';
-            } else {
-                subtitles.style.display = 'none';
-            }
+            subtitles.style.display = 'none';
         }
     }, 50); // Update frequently for smooth animation
 }
