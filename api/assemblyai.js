@@ -14,6 +14,9 @@ export async function POST(request) {
       });
     }
 
+    // Convert File/Blob to ArrayBuffer (required for Edge runtime fetch)
+    const arrayBuffer = await audioFile.arrayBuffer();
+
     // Upload audio to AssemblyAI
     const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
       method: 'POST',
@@ -21,7 +24,7 @@ export async function POST(request) {
         authorization: process.env.ASSEMBLYAI_API_KEY,
         'content-type': 'application/octet-stream',
       },
-      body: audioFile,
+      body: arrayBuffer,
     });
 
     if (!uploadResponse.ok) {
@@ -42,12 +45,7 @@ export async function POST(request) {
         audio_url: upload_url,
         punctuate: true,
         format_text: true,
-        word_boost: [],
-        auto_highlights: false,
-        audio_start_from: 0,
-        speaker_labels: false,
-        timestamps: true, // CRITICAL: Enable word-level timestamps
-        disfluencies: false,
+        word_timestamps: true,   // ✅ Required for word-level timestamps
       }),
     });
 
@@ -59,7 +57,7 @@ export async function POST(request) {
     const { id } = await transcriptResponse.json();
 
     // Poll for transcription results with a timeout
-    const maxPollTime = 60000;
+    const maxPollTime = 120000; // 2 min (increase if needed)
     const pollInterval = 2000;
     let elapsedTime = 0;
 
@@ -78,7 +76,7 @@ export async function POST(request) {
       const transcriptData = await pollResponse.json();
 
       if (transcriptData.status === 'completed') {
-        // Return the words array with proper timing
+        // ✅ Return the words array with start/end timestamps
         return new Response(JSON.stringify(transcriptData.words || []), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
@@ -93,7 +91,7 @@ export async function POST(request) {
       elapsedTime += pollInterval;
     }
 
-    throw new Error('Transcription timed out after 60 seconds');
+    throw new Error('Transcription timed out after 2 minutes');
   } catch (error) {
     console.error('AssemblyAI API error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
