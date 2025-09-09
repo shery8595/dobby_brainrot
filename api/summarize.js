@@ -30,7 +30,7 @@ export async function POST(request) {
         model: 'accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new',
         messages: [{
           role: 'user',
-          content: `You are Rick Sanchez from Rick and Morty. Summarize the following document in your unique, snarky, and brilliant style. Keep it concise, under 300 words, and explain it like you're talking to Morty. Get to the point, and don't bore me with fluff! Document: ${truncatedText}`,
+          content: `You are Rick Sanchez from Rick and Morty. Summarize the following document in your unique, snarky, and brilliant style. Keep it concise, under 30 words, and explain it like you're talking to Morty. Get to the point, and don't bore me with fluff! Document: ${truncatedText}`,
         }],
         max_tokens: 300,
         temperature: 0.9,
