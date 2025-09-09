@@ -19,7 +19,7 @@ export async function POST(request) {
       method: 'POST',
       headers: {
         authorization: process.env.ASSEMBLYAI_API_KEY,
-        'content-type': audioFile.type || 'audio/wav', // Ensure correct MIME type
+        'content-type': audioFile.type || 'audio/wav',
       },
       body: audioFile,
     });
@@ -42,10 +42,13 @@ export async function POST(request) {
         audio_url: upload_url,
         punctuate: true,
         format_text: true,
-        word_boost: [], // Improve accuracy for common words if needed
-        auto_highlights: false, // Disable highlights to focus on timestamps
-        audio_start_from: 0, // Start from beginning
-        speaker_diarization: false, // Optional: Enable if multiple speakers
+        word_boost: [],
+        auto_highlights: false,
+        audio_start_from: 0,
+        speaker_labels: false,
+        // CRITICAL: Enable word-level timestamps
+        timestamps: true,
+        disfluencies: false,
       }),
     });
 
@@ -57,8 +60,8 @@ export async function POST(request) {
     const { id } = await transcriptResponse.json();
 
     // Poll for transcription results with a timeout
-    const maxPollTime = 60000; // 60 seconds max
-    const pollInterval = 2000; // Poll every 2 seconds
+    const maxPollTime = 60000;
+    const pollInterval = 2000;
     let elapsedTime = 0;
 
     while (elapsedTime < maxPollTime) {
@@ -76,9 +79,8 @@ export async function POST(request) {
       const transcriptData = await pollResponse.json();
 
       if (transcriptData.status === 'completed') {
-        // Return word-level timestamps or empty array if none
-        const words = transcriptData.words || [];
-        return new Response(JSON.stringify(words), {
+        // Return the full transcript data including words array
+        return new Response(JSON.stringify(transcriptData), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         });
