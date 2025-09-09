@@ -560,7 +560,7 @@
         const playWithVideoBtn = document.getElementById('playWithVideo');
         const stopVideoBtn = document.getElementById('stopVideo');
 
-        // API configurations - using environment variables
+        // API configurations (loaded from Vercel environment variables)
         const DOBBY_API_KEY = process.env.DOBBY_API_KEY;
         const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
         const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY;
@@ -569,10 +569,10 @@
         const ASSEMBLYAI_UPLOAD_URL = 'https://api.assemblyai.com/v2/upload';
         const ASSEMBLYAI_TRANSCRIPT_URL = 'https://api.assemblyai.com/v2/transcript';
 
-        // Check if environment variables are available
+        // Validate environment variables
         if (!DOBBY_API_KEY || !ELEVENLABS_API_KEY || !ASSEMBLYAI_API_KEY) {
-            console.error("Missing required environment variables");
-            // You might want to show a user-friendly error message
+            console.error('Missing required environment variables. Please set DOBBY_API_KEY, ELEVENLABS_API_KEY, and ASSEMBLYAI_API_KEY in Vercel.');
+            showError('Application configuration error. Please contact the administrator.');
         }
 
         // Rick loading quotes
@@ -836,11 +836,6 @@
         }
 
         async function getSummaryFromDobby(text) {
-            // Check if API key is available
-            if (!DOBBY_API_KEY) {
-                throw new Error('API configuration error: Missing Dobby API key');
-            }
-            
             // Limit text length to avoid API token limits
             const truncatedText = text.length > 12000 ? text.substring(0, 12000) + "..." : text;
             
@@ -882,11 +877,6 @@ ${truncatedText}`
 
         async function convertDialogueToSpeechWithGaps(kidQuestion, rickResponse, kidUnderstanding) {
     try {
-        // Check if API key is available
-        if (!ELEVENLABS_API_KEY) {
-            throw new Error('API configuration error: Missing ElevenLabs API key');
-        }
-        
         // Get available voices first
         const voicesResponse = await fetch('https://api.elevenlabs.io/v1/voices', {
             headers: {
@@ -1054,11 +1044,6 @@ ${truncatedText}`
 
         // AssemblyAI integration for word timestamps
         async function uploadToAssemblyAI(audioBlob) {
-            // Check if API key is available
-            if (!ASSEMBLYAI_API_KEY) {
-                throw new Error('API configuration error: Missing AssemblyAI API key');
-            }
-            
             const response = await fetch(ASSEMBLYAI_UPLOAD_URL, {
                 method: 'POST',
                 headers: {
