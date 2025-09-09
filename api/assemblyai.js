@@ -79,8 +79,9 @@ export async function POST(request) {
       const transcriptData = await pollResponse.json();
 
       if (transcriptData.status === 'completed') {
-        // Return the full transcript data including words array
-        return new Response(JSON.stringify(transcriptData), {
+        // Return just the words array
+        const words = transcriptData.words || [];
+        return new Response(JSON.stringify(words), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         });
