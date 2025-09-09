@@ -1055,8 +1055,10 @@
             }
         }
 
-       async function getAssemblyAIWordTimestamps(audioBlob) {
+      async function getAssemblyAIWordTimestamps(audioBlob) {
     try {
+        console.log('Starting AssemblyAI transcription...');
+        
         const formData = new FormData();
         formData.append('audio', audioBlob, 'audio.wav');
         
@@ -1066,17 +1068,41 @@
         });
 
         if (!response.ok) {
-            throw new Error('AssemblyAI proxy error');
+            const errorText = await response.text();
+            console.error('AssemblyAI API error:', errorText);
+            throw new Error(`AssemblyAI proxy error: ${response.status}`);
         }
 
         const data = await response.json();
-        // Return the words array from the transcript data
-        return data.words || [];
-    } catch (err) {
-        console.warn('AssemblyAI alignment failed; using estimated segments.', err);
+        console.log('AssemblyAI response:', data);
+
+        // Your API returns the words array directly, not wrapped in an object
+        const words = Array.isArray(data) ? data : [];
+        
+        if (words.length === 0) {
+            console.warn('No words returned from AssemblyAI');
+            return [];
+        }
+
+        // Validate and format the word timestamps
+        const formattedWords = words.map(word => ({
+            text: word.text,
+            start: word.start, // AssemblyAI returns milliseconds
+            end: word.end,
+            confidence: word.confidence || 0.8
+        }));
+
+        console.log(`Successfully processed ${formattedWords.length} words from AssemblyAI`);
+        return formattedWords;
+        
+    } catch (error) {
+        console.error('AssemblyAI alignment failed:', error);
+        // Don't silently fail - let the user know what happened
+        showError(`Subtitle alignment failed: ${error.message}. Using estimated timing instead.`);
         return [];
     }
 }
+
 
         
 function createSubtitleSegments(kidQuestion, rickResponse, kidUnderstanding) {
@@ -1194,66 +1220,83 @@ function createSubtitleSegments(kidQuestion, rickResponse, kidUnderstanding) {
             currentSubtitleIndex = 0;
         }
 
-        function startSubtitles(audio) {
-            clearInterval(subtitleInterval);
+       
+function startSubtitles(audio) {
+    clearInterval(subtitleInterval);
+    
+    console.log('Starting subtitles with', wordTimestamps.length, 'words');
+    
+    // Use AssemblyAI word timestamps if available
+    if (wordTimestamps.length > 0) {
+        console.log('Using precise word-level timing from AssemblyAI');
+        
+        subtitleInterval = setInterval(() => {
+            const currentTime = audio.currentTime * 1000; // convert to milliseconds
             
-            // Use AssemblyAI word timestamps if available, otherwise fall back to estimated segments
-            if (wordTimestamps.length > 0) {
-                // Use precise word-level timing from AssemblyAI
-                subtitleInterval = setInterval(() => {
-                    const currentTime = audio.currentTime * 1000; // convert to ms
-                    const currentWords = [];
-                    
-                    // Find all words that should be visible now (show a window around current time)
-                    const windowStart = Math.max(0, currentTime - 2000); // 2 seconds before
-                    const windowEnd = currentTime + 3000; // 3 seconds ahead
-                    
-                    for (let i = 0; i < wordTimestamps.length; i++) {
-                        const word = wordTimestamps[i];
-                        if (word.start >= windowStart && word.start <= windowEnd) {
-                            let state = 'future';
-                            if (currentTime >= word.start && currentTime <= word.end) {
-                                state = 'current';
-                            } else if (currentTime > word.end) {
-                                state = 'past';
-                            }
-                            
-                            currentWords.push({
-                                ...word,
-                                state: state
-                            });
-                        }
+            // Find words that should be displayed in a window around current time
+            const windowBefore = 1500; // 1.5 seconds before
+            const windowAfter = 2500;  // 2.5 seconds after
+            
+            const visibleWords = wordTimestamps.filter(word => {
+                return word.start >= (currentTime - windowBefore) && 
+                       word.start <= (currentTime + windowAfter);
+            });
+            
+            if (visibleWords.length > 0) {
+                // Create HTML for words with timing states
+                const wordsHtml = visibleWords.map(word => {
+                    let state = 'future';
+                    if (currentTime >= word.start && currentTime <= word.end) {
+                        state = 'current';
+                    } else if (currentTime > word.end) {
+                        state = 'past';
                     }
                     
-                    // Update the subtitle element
-                    if (currentWords.length > 0) {
-                        subtitles.innerHTML = currentWords.map(word => 
-                            `<span class="subtitle-word ${word.state}">${word.text}</span>`
-                        ).join(' ');
-                        subtitles.style.display = 'block';
-                    } else {
-                        subtitles.style.display = 'none';
-                    }
-                }, 50); // Update frequently for smooth animation
+                    return `<span class="subtitle-word ${state}">${word.text}</span>`;
+                }).join(' ');
+                
+                subtitles.innerHTML = wordsHtml;
+                subtitles.style.display = 'block';
             } else {
-                // Fall back to segment-based subtitles
-                subtitleInterval = setInterval(() => {
-                    const currentTime = audio.currentTime;
-                    
-                    // Find current segment
-                    const currentSegment = subtitleSegments.find(segment => 
-                        currentTime >= segment.start && currentTime <= segment.end
-                    );
-                    
-                    if (currentSegment) {
-                        subtitles.textContent = currentSegment.text;
-                        subtitles.style.display = 'block';
-                    } else {
-                        subtitles.style.display = 'none';
-                    }
-                }, 100);
+                // No words in current window
+                subtitles.style.display = 'none';
             }
-        }
+        }, 100); // Update every 100ms for smooth transitions
+        
+    } else {
+        console.log('Falling back to segment-based subtitles');
+        // Fall back to segment-based subtitles
+        subtitleInterval = setInterval(() => {
+            const currentTime = audio.currentTime;
+            
+            const currentSegment = subtitleSegments.find(segment => 
+                currentTime >= segment.start && currentTime <= segment.end
+            );
+            
+            if (currentSegment) {
+                // Split segment into smaller chunks for better display
+                const words = currentSegment.text.split(' ');
+                const maxWordsPerLine = 8;
+                
+                if (words.length <= maxWordsPerLine) {
+                    subtitles.textContent = currentSegment.text;
+                } else {
+                    // Show words progressively
+                    const segmentDuration = currentSegment.end - currentSegment.start;
+                    const timeInSegment = currentTime - currentSegment.start;
+                    const progressRatio = timeInSegment / segmentDuration;
+                    const wordsToShow = Math.min(words.length, Math.floor(progressRatio * words.length) + maxWordsPerLine);
+                    
+                    subtitles.textContent = words.slice(Math.max(0, wordsToShow - maxWordsPerLine), wordsToShow).join(' ');
+                }
+                
+                subtitles.style.display = 'block';
+            } else {
+                subtitles.style.display = 'none';
+            }
+        }, 100);
+    }
+}
 
         function showLoading(text) {
             loadingText.textContent = text;
