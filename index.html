@@ -853,39 +853,24 @@
         }
         async function convertDialogueToSpeechWithGaps(kidQuestion, rickResponse, kidUnderstanding) {
     try {
-        // Get available voices first
-        const voicesResponse = await fetch('https://api.elevenlabs.io/v1/voices', {
-            headers: {
-                'xi-api-key': ELEVENLABS_API_KEY
-            }
-        });
+        // Use specific voice IDs for consistency
+        const rickVoiceId = "cgLpYGyXZhkyalKZ0xeZ"; // Antoni voice
+        const kidVoiceId = "Hybl6rg76ZOcgqZqN5WN"; // Elli voice
 
-        if (!voicesResponse.ok) {
-            throw new Error('Failed to get voices from ElevenLabs');
-        }
-
-        const voicesData = await voicesResponse.json();
-        
-        // Use specific voice IDs instead of names
-        const rickVoiceId = "cgLpYGyXZhkyalKZ0xeZ";  // Antoni voice ID
-        const kidVoiceId = "Hybl6rg76ZOcgqZqN5WN";   // Elli voice ID (younger sounding)
-        
-        // Generate all audio parts
+        // Generate audio for each part
         const kidQuestionAudio = await generateSpeech(kidQuestion, kidVoiceId, 0.6, 0.8);
         const rickResponseAudio = await generateSpeech(rickResponse, rickVoiceId, 0.4, 0.9);
         const kidUnderstandingAudio = await generateSpeech(kidUnderstanding, kidVoiceId, 0.6, 0.8);
-        
-        // Create combined audio with gaps using Web Audio API
+
+        // Combine audio with gaps
         return await combineAudioWithGaps([
-            { audio: kidQuestionAudio, gap: 1.0 },      // 1 second gap after question
-            { audio: rickResponseAudio, gap: 0.8 },     // 0.8 second gap after Rick's answer
-            { audio: kidUnderstandingAudio, gap: 0 }    // No gap after final understanding
+            { audio: kidQuestionAudio, gap: 1.0 },
+            { audio: rickResponseAudio, gap: 0.8 },
+            { audio: kidUnderstandingAudio, gap: 0 }
         ]);
-        
     } catch (error) {
         console.error('Dialogue conversion error:', error);
-        // Fallback to basic audio without dialogue
-        throw error;
+        throw new Error('Failed to generate audio: ' + error.message);
     }
 }
 
