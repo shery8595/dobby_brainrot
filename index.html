@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Summarizer with Debug</title>
+    <title>Document Summarizer</title>
+    <!-- Add required libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -12,83 +15,141 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #00ff41 0%, #0080ff 50%, #ff0080 100%);
             min-height: 100vh;
             padding: 20px;
-            color: #f0f0f0;
-            line-height: 1.6;
+            color: #333;
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 900px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.05);
+            background: #1a1a1a;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 20px 40px rgba(0,255,65,0.3);
             overflow: hidden;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 2px solid #00ff41;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+        }
+        
+        #minecraftVideo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translateX(-50%) translateY(-50%);
+            object-fit: cover;
+        }
+        
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+        }
+        
+        .subtitles {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: #00ff41;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 1.4em;
+            text-align: center;
+            max-width: 80%;
+            z-index: 10;
+            border: 2px solid #00ff41;
+            display: none;
+            font-weight: bold;
+            text-shadow: 0 0 10px #000;
         }
         
         .header {
-            background: linear-gradient(45deg, #00c6ff, #0072ff);
-            color: #fff;
+            background: linear-gradient(45deg, #00ff41, #0080ff);
+            color: #000;
             padding: 30px;
             text-align: center;
+            position: relative;
+        }
+        
+        .header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M20 20c0 11.046-8.954 20-20 20s-20-8.954-20-20 8.954-20 20-20 20 8.954 20 20z'/%3E%3C/g%3E%3C/svg%3E");
         }
         
         .header h1 {
             font-size: 2.8em;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
         }
         
         .header p {
             opacity: 0.9;
             font-size: 1.2em;
+            font-weight: bold;
+            position: relative;
+            z-index: 1;
         }
         
         .main-content {
-            padding: 30px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-        }
-        
-        .left-panel, .right-panel {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .panel-title {
-            font-size: 1.5em;
-            margin-bottom: 20px;
-            color: #00c6ff;
-            border-bottom: 2px solid #00c6ff;
-            padding-bottom: 10px;
+            padding: 40px;
+            background: #1a1a1a;
+            color: #00ff41;
         }
         
         .upload-section {
-            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border: 3px dashed #00ff41;
             border-radius: 10px;
-            padding: 30px;
+            padding: 40px;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             transition: all 0.3s ease;
             cursor: pointer;
+            background: rgba(0,255,65,0.05);
         }
         
         .upload-section:hover {
-            border-color: #00c6ff;
-            background: rgba(0, 198, 255, 0.05);
+            border-color: #0080ff;
+            background: rgba(0,128,255,0.1);
+            transform: scale(1.02);
         }
         
         .upload-section.dragover {
-            border-color: #0072ff;
-            background: rgba(0, 114, 255, 0.1);
+            border-color: #ff0080;
+            background: rgba(255,0,128,0.1);
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
         
         #fileInput {
@@ -96,105 +157,131 @@
         }
         
         .upload-button {
-            background: linear-gradient(45deg, #00c6ff, #0072ff);
-            color: #fff;
+            background: linear-gradient(45deg, #00ff41, #0080ff);
+            color: #000;
             border: none;
-            padding: 12px 25px;
+            padding: 15px 30px;
             border-radius: 25px;
-            font-size: 1em;
+            font-size: 1.1em;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s ease;
-            margin-top: 15px;
+            text-transform: uppercase;
         }
         
         .upload-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 198, 255, 0.4);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,255,65,0.4);
         }
         
         .file-info {
             margin: 20px 0;
             padding: 15px;
-            background: rgba(0, 198, 255, 0.1);
+            background: rgba(0,255,65,0.1);
             border-radius: 8px;
-            border: 1px solid rgba(0, 198, 255, 0.3);
+            border: 1px solid #00ff41;
+            display: none;
         }
         
         .progress-bar {
             width: 100%;
             height: 8px;
-            background: rgba(255, 255, 255, 0.1);
+            background: #333;
             border-radius: 4px;
             margin: 20px 0;
             overflow: hidden;
             display: none;
+            border: 1px solid #00ff41;
         }
         
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            background: linear-gradient(90deg, #00ff41, #0080ff, #ff0080);
             width: 0%;
             transition: width 0.3s ease;
+            animation: rainbow 2s linear infinite;
+            background-size: 200% 100%;
+        }
+        
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
         }
         
         .results-section {
             display: none;
+            margin-top: 30px;
         }
         
         .summary-box {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0,255,65,0.05);
+            border: 2px solid #00ff41;
             border-radius: 10px;
-            padding: 20px;
+            padding: 25px;
             margin: 20px 0;
+            position: relative;
+        }
+        
+        .summary-box::before {
+            content: "";
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00ff41, #0080ff, #ff0080, #00ff41);
+            border-radius: 10px;
+            z-index: -1;
+            animation: borderGlow 3s linear infinite;
+        }
+        
+        @keyframes borderGlow {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
         }
         
         .summary-title {
-            color: #00c6ff;
-            font-size: 1.3em;
+            color: #00ff41;
+            font-size: 1.4em;
             margin-bottom: 15px;
+            font-weight: 600;
+            text-shadow: 0 0 10px #00ff41;
         }
         
         .summary-text {
             line-height: 1.6;
-            color: #f0f0f0;
+            color: #fff;
+            font-size: 1.1em;
+            text-shadow: 0 0 5px rgba(0,255,65,0.3);
         }
         
         .audio-section {
+            text-align: center;
             margin-top: 25px;
         }
         
         .audio-player {
             width: 100%;
-            margin: 15px 0;
-            border-radius: 5px;
+            max-width: 400px;
+            margin: 15px auto;
+            filter: hue-rotate(120deg) saturate(1.5);
         }
         
         .error {
-            background: rgba(255, 0, 0, 0.1);
-            color: #ff6b6b;
+            background: rgba(255,0,128,0.2);
+            color: #ff0080;
             padding: 15px;
             border-radius: 8px;
             margin: 10px 0;
             display: none;
-            border: 1px solid rgba(255, 107, 107, 0.3);
+            border: 1px solid #ff0080;
         }
         
         .loading {
             text-align: center;
-            color: #00c6ff;
+            color: #00ff41;
+            font-weight: 500;
             display: none;
-        }
-        
-        .spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top: 3px solid #00c6ff;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 15px;
         }
         
         @keyframes spin {
@@ -202,160 +289,259 @@
             100% { transform: rotate(360deg); }
         }
         
-        .debug-section {
-            margin-top: 30px;
+        .spinner {
+            border: 3px solid #333;
+            border-top: 3px solid #00ff41;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 0.5s linear infinite;
+            margin: 0 auto 15px;
         }
         
-        .debug-log {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            padding: 15px;
-            max-height: 300px;
-            overflow-y: auto;
-            font-family: monospace;
+        .rick-quote {
+            font-style: italic;
+            color: #0080ff;
             font-size: 0.9em;
-            margin-top: 15px;
-        }
-        
-        .debug-entry {
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .debug-timestamp {
-            color: #00c6ff;
-            font-size: 0.85em;
-        }
-        
-        .debug-message {
-            color: #f0f0f0;
-        }
-        
-        .debug-error {
-            color: #ff6b6b;
-        }
-        
-        .debug-success {
-            color: #4ecdc4;
-        }
-        
-        .debug-warning {
-            color: #ffe66d;
-        }
-        
-        .debug-file {
-            background: rgba(0, 198, 255, 0.1);
-            padding: 10px;
-            border-radius: 5px;
             margin-top: 10px;
-            font-size: 0.9em;
         }
         
-        .debug-download {
-            color: #00c6ff;
-            text-decoration: none;
-            display: inline-block;
-            margin-top: 5px;
-            font-weight: bold;
+        .video-controls {
+            text-align: center;
+            margin-top: 20px;
         }
         
-        .debug-download:hover {
-            text-decoration: underline;
-        }
-        
-        .section {
-            margin-bottom: 30px;
-        }
-        
-        .toggle-debug {
-            background: rgba(255, 255, 255, 0.1);
-            color: #f0f0f0;
+        .video-button {
+            background: linear-gradient(45deg, #00ff41, #0080ff);
+            color: #000;
             border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
+            padding: 12px 25px;
+            border-radius: 20px;
+            font-size: 1em;
+            font-weight: bold;
             cursor: pointer;
-            margin-top: 10px;
-            font-size: 0.9em;
+            transition: all 0.2s ease;
+            margin: 0 10px;
         }
         
-        .toggle-debug:hover {
-            background: rgba(255, 255, 255, 0.15);
+        .video-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,255,65,0.4);
         }
-        
-        @media (max-width: 900px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
+    </style>
+    <style>
+        /* Minimal, professional overrides */
+        :root {
+            --bg: #0b0f14;
+            --panel: #111418;
+            --muted: #2a2f36;
+            --text: #e5e7eb;
+            --subtle: #9aa4b2;
+            --accent: #10a37f; /* GPT-like green */
+            --accent-hover: #0e8f70;
         }
+
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 24px;
+        }
+
+        .video-container { display: none; }
+        .subtitles { display: none; }
+        /* Minecraft shorts-style subtitle aesthetics */
+        .subtitles {
+            background: transparent;
+            border: none;
+            bottom: 12vh;
+            color: #ffffff;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1.15;
+            font-size: clamp(20px, 4.2vw, 40px);
+            text-align: center;
+            text-shadow: 2px 2px 0px #000, -2px 2px 0px #000, 2px -2px 0px #000, -2px -2px 0px #000, 0 0 10px rgba(0,0,0,0.6);
+            padding: 0 12px;
+        }
+        .subtitle-word { opacity: 0.95; transition: transform .18s ease; }
+        .subtitle-word.past { color: #f3f4f6; }
+        .subtitle-word.current { animation: pop .18s ease-out; transform: scale(1.08); }
+        .subtitle-word.future { color: #d1d5db; opacity: 0.7; }
+        .hl-red { color: #ef4444; }
+        .hl-yellow { color: #f59e0b; }
+        .hl-green { color: #10b981; }
+        @keyframes pop {
+            0% { transform: scale(0.96); }
+            100% { transform: scale(1); }
+        }
+
+        .container {
+            max-width: 840px;
+            background: var(--panel);
+            border: 1px solid var(--muted);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+        }
+
+        .header {
+            background: transparent;
+            padding: 24px 28px;
+            color: var(--text);
+        }
+        .header::before { display: none; }
+        .header h1 { font-size: 26px; margin-bottom: 6px; text-shadow: none; }
+        .header p { font-size: 14px; color: var(--subtle); font-weight: 400; }
+
+        .main-content { background: transparent; color: var(--text); padding: 28px; }
+
+        .upload-section {
+            border: 1px dashed var(--muted);
+            background: transparent;
+            border-radius: 10px;
+            padding: 28px;
+            transition: border-color .2s ease, background-color .2s ease;
+        }
+        .upload-section:hover { border-color: var(--accent); background: rgba(16,163,127,0.04); transform: none; }
+        .upload-section.dragover { border-color: var(--accent); background: rgba(16,163,127,0.06); animation: none; }
+
+        .upload-button {
+            background: var(--accent);
+            color: #ffffff;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: none;
+            transition: background-color .15s ease, transform .05s ease;
+        }
+        .upload-button:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: none; }
+
+        .file-info {
+            margin: 16px 0 0;
+            padding: 12px 14px;
+            background: transparent;
+            border: 1px solid var(--muted);
+            color: var(--text);
+        }
+        .rick-quote { display: none; }
+
+        .progress-bar { height: 6px; background: #161a20; border: 1px solid var(--muted); }
+        .progress-fill { background: var(--accent); animation: none; background-size: auto; }
+
+        .loading { color: var(--subtle); }
+        #rickLoadingQuote { display: none; }
+
+        .error {
+            background: rgba(220,38,38,0.08);
+            color: #fca5a5;
+            border: 1px solid rgba(220,38,38,0.35);
+        }
+
+        .results-section { margin-top: 20px; }
+        .summary-box {
+            background: transparent;
+            border: 1px solid var(--muted);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .summary-box::before { display: none; }
+        .summary-title { color: var(--text); font-size: 16px; font-weight: 600; text-shadow: none; }
+        .summary-text { color: var(--text); text-shadow: none; font-size: 15px; line-height: 1.7; }
+
+        .audio-section { margin-top: 18px; }
+        .audio-player { filter: none; }
+
+        .video-controls { display: none; }
+        .video-button { background: #161a20; color: var(--text); border: 1px solid var(--muted); }
+        .video-button:hover { box-shadow: none; border-color: var(--accent); }
+
+        .open-player {
+            margin-top: 16px;
+            background: var(--accent);
+            color: #ffffff;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .open-player:hover { background: var(--accent-hover); }
     </style>
 </head>
 <body>
+    <div class="video-container">
+        <video id="minecraftVideo" loop muted>
+            <source src="bg_vid/minecraft.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div class="video-overlay"></div>
+    </div>
+    
+    <div class="subtitles" id="subtitles"></div>
+    
     <div class="container">
         <div class="header">
-            <h1>Document Summarizer with Debug</h1>
-            <p>Upload a document to generate a summary with comprehensive debug information</p>
+            <h1>Document Summarizer</h1>
+            <p>Upload a document to generate a concise summary.</p>
         </div>
         
         <div class="main-content">
-            <div class="left-panel">
-                <div class="section">
-                    <h2 class="panel-title">Document Processing</h2>
-                    <div class="upload-section" id="uploadSection">
-                        <input type="file" id="fileInput" accept=".txt" />
-                        <h3>Drop your text document here</h3>
-                        <p>Supported format: TXT</p>
-                        <br>
-                        <button class="upload-button">Choose file</button>
-                    </div>
-                    
-                    <div class="file-info" id="fileInfo">
-                        <strong>Selected file:</strong> <span id="fileName"></span>
-                    </div>
-                    
-                    <div class="progress-bar" id="progressBar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    
-                    <div class="loading" id="loading">
-                        <div class="spinner"></div>
-                        <p id="loadingText">Processing your document...</p>
-                    </div>
-                    
-                    <div class="error" id="error"></div>
-                    
-                    <div class="results-section" id="results">
-                        <div class="summary-box">
-                            <div class="summary-title">Summary</div>
-                            <div class="summary-text" id="summaryText"></div>
-                        </div>
-                        
-                        <div class="audio-section">
-                            <div class="summary-title">Audio Summary</div>
-                            <audio class="audio-player" id="audioPlayer" controls>
-                                Your browser does not support the audio element.
-                            </audio>
-                        </div>
-                    </div>
-                </div>
+            <div class="upload-section" id="uploadSection">
+                <input type="file" id="fileInput" accept=".doc,.docx,.pdf,.txt" />
+                <h3>Drop your document here</h3>
+                <p>Supported formats: PDF, DOCX, TXT</p>
+                <br>
+                <button class="upload-button">Choose file</button>
             </div>
             
-            <div class="right-panel">
-                <div class="section">
-                    <h2 class="panel-title">Debug Information</h2>
-                    <p>Debug files will be generated at each stage of processing</p>
-                    
-                    <div class="debug-section">
-                        <div class="debug-log" id="debugLog"></div>
-                        <button class="toggle-debug" id="toggleDebug">Show Detailed Debug</button>
-                    </div>
+            <div class="file-info" id="fileInfo">
+                <strong>Selected file:</strong> <span id="fileName"></span>
+                <div class="rick-quote"></div>
+            </div>
+            
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p id="loadingText">Processing your document...</p>
+                <div class="rick-quote" id="rickLoadingQuote"></div>
+            </div>
+            
+            <div class="error" id="error"></div>
+            
+            <div class="results-section" id="results">
+                <div class="summary-box">
+                    <div class="summary-title">Summary</div>
+                    <div class="summary-text" id="summaryText"></div>
+                </div>
+                
+                <div class="audio-section">
+                    <div class="summary-title">Audio summary</div>
+                    <audio class="audio-player" id="audioPlayer" controls>
+                        Your browser does not support the audio element.
+                    </audio>
+                    <button class="open-player" id="openPlayerBtn" style="display:none">Open video-style player</button>
+                </div>
+                
+                <div class="video-controls">
+                    <button class="video-button" id="playWithVideo">Play with background video</button>
+                    <button class="video-button" id="stopVideo">Stop video</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // DOM elements
+        // Set PDF.js worker path
+        pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
         const fileInput = document.getElementById('fileInput');
         const uploadSection = document.getElementById('uploadSection');
         const fileInfo = document.getElementById('fileInfo');
@@ -364,17 +550,47 @@
         const progressFill = document.getElementById('progressFill');
         const loading = document.getElementById('loading');
         const loadingText = document.getElementById('loadingText');
+        const rickLoadingQuote = document.getElementById('rickLoadingQuote');
         const error = document.getElementById('error');
         const results = document.getElementById('results');
         const summaryText = document.getElementById('summaryText');
         const audioPlayer = document.getElementById('audioPlayer');
-        const debugLog = document.getElementById('debugLog');
-        const toggleDebug = document.getElementById('toggleDebug');
+        const minecraftVideo = document.getElementById('minecraftVideo');
+        const subtitles = document.getElementById('subtitles');
+        const playWithVideoBtn = document.getElementById('playWithVideo');
+        const stopVideoBtn = document.getElementById('stopVideo');
+
+        // API configurations
+         const SUMMARIZE_API_URL = '/api/summarize';
+        const GENERATE_SPEECH_API_URL = '/api/generate-speech';
+        const ASSEMBLYAI_API_URL = '/api/assemblyai';
         
-        // Debug state
-        let debugMode = false;
-        let debugFiles = [];
-        
+        const DOBBY_API_URL = 'https://api.fireworks.ai/inference/v1/chat/completions';
+        const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1/text-to-speech';
+        const ASSEMBLYAI_UPLOAD_URL = 'https://api.assemblyai.com/v2/upload';
+        const ASSEMBLYAI_TRANSCRIPT_URL = 'https://api.assemblyai.com/v2/transcript';
+
+        // Rick loading quotes
+        const rickQuotes = [
+            "*BURP* Science, Morty! Science!",
+            "I'm processing this faster than your tiny brain could comprehend!",
+            "This document is more boring than Jerry's job!",
+            "Wubba lubba dub dub! Almost done...",
+            "Your document is getting the full Rick treatment!",
+            "I've seen interdimensional cable more interesting than this!"
+        ];
+
+        // Variables to store audio and subtitle data
+        let audioBlob = null;
+        let audioDuration = 0;
+        let subtitleSegments = [];
+        let currentSubtitleIndex = 0;
+        let subtitleInterval = null;
+        let wordTimestamps = [];
+        let kidQuestion = "";
+        let rickResponse = "";
+        let kidUnderstanding = "";
+
         // Drag and drop functionality
         uploadSection.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -403,21 +619,26 @@
                 handleFile(e.target.files[0]);
             }
         });
-        
-        toggleDebug.addEventListener('click', () => {
-            debugMode = !debugMode;
-            toggleDebug.textContent = debugMode ? 'Hide Detailed Debug' : 'Show Detailed Debug';
-            logDebug(`Detailed debug mode ${debugMode ? 'enabled' : 'disabled'}`, 'info');
-        });
+
+        // Video control buttons
+        playWithVideoBtn.addEventListener('click', playVideoWithAudio);
+        stopVideoBtn.addEventListener('click', stopVideoPlayback);
 
         function handleFile(file) {
             // Validate file type
-            const validTypes = ['text/plain'];
-            const validExtensions = ['.txt'];
+            const validTypes = [
+                'application/pdf', 
+                'application/msword', 
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+                'text/plain'
+            ];
+            
+            // Also check by file extension for browsers that might not report correct MIME types
+            const validExtensions = ['.pdf', '.doc', '.docx', '.txt'];
             const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
             
             if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
-                showError('Please upload a TXT file.');
+                showError('Unsupported file type. Please upload a PDF, DOC, DOCX, or TXT file.');
                 return;
             }
 
@@ -433,13 +654,9 @@
             try {
                 hideError();
                 showLoading('Extracting text...');
-                clearDebugLog();
-                debugFiles = [];
                 
                 // Extract text from file
                 const text = await extractTextFromFile(file);
-                createDebugFile(text, '01_extracted_text.txt');
-                logDebug('Text extracted from document', 'success');
                 
                 if (!text.trim()) {
                     throw new Error('The document appears to be empty.');
@@ -448,23 +665,32 @@
                 updateProgress(25);
                 updateLoadingText('Generating summary...');
                 
-                // Simulate summary generation (in a real app, this would call an API)
-                const summary = await simulateSummaryGeneration(text);
-                createDebugFile(summary, '02_generated_summary.txt');
-                logDebug('Summary generated successfully', 'success');
+                // Get summary from Dobby LLM in Rick's style
+                const summary = await getSummaryFromDobby(text);
                 
                 updateProgress(75);
                 updateLoadingText('Creating audio summary...');
                 
-                // Simulate audio generation (in a real app, this would call an API)
-                const audioBlob = await simulateAudioGeneration(summary);
-                createDebugFile('Audio generated successfully', '03_audio_generated.txt');
-                logDebug('Audio generated from summary', 'success');
+                // Create the dialogue format with kid's question and Rick's answer
+                const documentTopic = extractTopicFromText(text);
+                kidQuestion = generateKidQuestion(documentTopic, file.name);
+                rickResponse = summary;
+                kidUnderstanding = generateKidUnderstanding();
                 
-                // Simulate AssemblyAI processing (in a real app, this would call AssemblyAI API)
-                const assemblyAiData = await simulateAssemblyAIProcessing(audioBlob);
-                createDebugFile(JSON.stringify(assemblyAiData, null, 2), '04_assemblyai_results.json');
-                logDebug('AssemblyAI processing completed', 'success');
+                // Convert dialogue to speech with gaps
+                audioBlob = await convertDialogueToSpeechWithGaps(kidQuestion, rickResponse, kidUnderstanding);
+                
+                // Create subtitle segments based on estimated durations
+                subtitleSegments = createSubtitleSegments(kidQuestion, rickResponse, kidUnderstanding);
+
+                // Try fetching precise word timestamps with AssemblyAI
+                try {
+                    updateLoadingText('Aligning audio to words...');
+                    wordTimestamps = await getAssemblyAIWordTimestamps(audioBlob);
+                } catch (alignErr) {
+                    console.warn('AssemblyAI alignment failed; using estimated segments.', alignErr);
+                    wordTimestamps = [];
+                }
                 
                 updateProgress(100);
                 
@@ -473,76 +699,455 @@
                 
             } catch (err) {
                 console.error('Error processing document:', err);
-                logDebug(`Error: ${err.message}`, 'error');
                 showError(err.message || 'Something went wrong while processing the document.');
             } finally {
                 hideLoading();
             }
         }
 
+        function extractTopicFromText(text) {
+            // Improved topic extraction
+            const words = text.toLowerCase().split(/\s+/);
+            const stopWords = new Set(['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'this', 'that', 'these', 'those', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'will', 'would', 'could', 'should']);
+            const wordCount = {};
+            
+            // Count word frequency, excluding stop words and short words
+            words.forEach(word => {
+                const cleanWord = word.replace(/[^a-zA-Z]/g, '');
+                if (cleanWord.length > 4 && !stopWords.has(cleanWord)) {
+                    wordCount[cleanWord] = (wordCount[cleanWord] || 0) + 1;
+                }
+            });
+            
+            // Find the most frequent meaningful word
+            let maxCount = 0;
+            let topic = "this document";
+            for (const word in wordCount) {
+                if (wordCount[word] > maxCount && wordCount[word] > 2) {
+                    maxCount = wordCount[word];
+                    topic = word;
+                }
+            }
+            
+            return topic.charAt(0).toUpperCase() + topic.slice(1);
+        }
+
+        function generateKidQuestion(topic, filename) {
+            // Remove file extension from filename for better context
+            const cleanFilename = filename.replace(/\.[^/.]+$/, "");
+            
+            const questions = [
+                `Hey Uncle Rick, I found this document called "${cleanFilename}" and it talks about ${topic}. Can you explain what it's all about?`,
+                `Uncle Rick, I'm trying to understand this ${topic} stuff from the document. What does it really mean?`,
+                `So Uncle Rick, this document mentions ${topic} a lot. Can you break it down for me in simple terms?`,
+                `I'm confused about ${topic} from this document, Uncle Rick. Can you help me understand it better?`,
+                `Uncle Rick, what's the main point about ${topic} in this document? It seems pretty complex.`
+            ];
+            
+            return questions[Math.floor(Math.random() * questions.length)];
+        }
+
+        function generateKidUnderstanding() {
+            const understandings = [
+                `Oh wow, that actually makes a lot of sense now! Thanks Uncle Rick, you're the smartest!`,
+                `Aha! So that's how it all works together. I get it now, thanks!`,
+                `That's actually really cool when you explain it like that! Science is awesome!`,
+                `Okay, I think I understand the main idea now. That's pretty interesting stuff!`,
+                `Whoa, so that's the key to understanding it all! Thanks for making it simple, Uncle Rick!`
+            ];
+            
+            return understandings[Math.floor(Math.random() * understandings.length)];
+        }
+
         async function extractTextFromFile(file) {
+            if (file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = () => reject(new Error('Failed to read this pathetic text file'));
+                    reader.readAsText(file);
+                });
+            }
+            
+            if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                return extractTextFromPDF(file);
+            }
+            
+            if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                file.name.toLowerCase().endsWith('.docx')) {
+                return extractTextFromDocx(file);
+            }
+            
+            if (file.type === 'application/msword' || file.name.toLowerCase().endsWith('.doc')) {
+                throw new Error('The .doc format is not supported. Please use .docx.');
+            }
+            
+            throw new Error('Unsupported file type.');
+        }
+
+        async function extractTextFromPDF(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = () => reject(new Error('Failed to read the text file'));
-                reader.readAsText(file);
+                reader.onload = async function(e) {
+                    try {
+                        const typedarray = new Uint8Array(e.target.result);
+                        const pdf = await pdfjsLib.getDocument({data: typedarray}).promise;
+                        let fullText = '';
+                        
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const textContent = await page.getTextContent();
+                            const pageText = textContent.items.map(item => item.str).join(' ');
+                            fullText += pageText + '\n';
+                        }
+                        
+                        if (!fullText.trim()) {
+                            reject(new Error('No extractable text found in the PDF.'));
+                            return;
+                        }
+                        
+                        resolve(fullText.trim());
+                    } catch (error) {
+                        reject(new Error('Failed to extract text from PDF: ' + error.message));
+                    }
+                };
+                reader.onerror = () => reject(new Error('Failed to read the PDF file.'));
+                reader.readAsArrayBuffer(file);
             });
         }
 
-        async function simulateSummaryGeneration(text) {
-            // Simulate API call delay
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            // In a real application, this would call an AI summarization API
-            // For demo purposes, we'll create a simple summary
-            const sentences = text.split('.');
-            return sentences.slice(0, 3).join('.') + '.';
-        }
-
-        async function simulateAudioGeneration(text) {
-            // Simulate API call delay
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            
-            // In a real application, this would call a text-to-speech API
-            // For demo purposes, we'll create a silent audio blob
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            gainNode.gain.value = 0; // Silent audio for demo
-            oscillator.start();
-            
-            // Create a short silent audio blob
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    oscillator.stop();
-                    // Create a minimal WAV file blob (silent)
-                    const wavData = new Uint8Array(44); // Empty WAV header
-                    resolve(new Blob([wavData], { type: 'audio/wav' }));
-                }, 100);
+        async function extractTextFromDocx(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    try {
+                        const arrayBuffer = e.target.result;
+                        const result = await mammoth.extractRawText({arrayBuffer: arrayBuffer});
+                        resolve(result.value);
+                    } catch (error) {
+                        reject(new Error('Failed to extract text from DOCX: ' + error.message));
+                    }
+                };
+                reader.onerror = () => reject(new Error('Failed to read the DOCX file.'));
+                reader.readAsArrayBuffer(file);
             });
         }
 
-        async function simulateAssemblyAIProcessing(audioBlob) {
-            // Simulate API call delay
-            await new Promise(resolve => setTimeout(resolve, 1800));
+        async function getSummaryFromDobby(text) {
+            const truncatedText = text.length > 12000 ? text.substring(0, 12000) + "..." : text;
             
-            // In a real application, this would call the AssemblyAI API
-            // For demo purposes, we'll return mock data
-            return {
-                status: 'completed',
-                words: [
-                    { text: 'This', start: 100, end: 300, confidence: 0.98 },
-                    { text: 'is', start: 300, end: 450, confidence: 0.99 },
-                    { text: 'a', start: 450, end: 550, confidence: 0.97 },
-                    { text: 'sample', start: 550, end: 800, confidence: 0.96 },
-                    { text: 'transcription', start: 800, end: 1100, confidence: 0.98 }
-                ],
-                audio_duration: 2.5
+            const response = await fetch(SUMMARIZE_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: truncatedText
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Summarization failed: ${errorData.error || response.status}`);
+            }
+
+            const data = await response.json();
+            return data.summary;
+        }
+        async function convertDialogueToSpeechWithGaps(kidQuestion, rickResponse, kidUnderstanding) {
+    try {
+        // Use specific voice IDs for consistency
+        const rickVoiceId = "cgLpYGyXZhkyalKZ0xeZ"; // Antoni voice
+        const kidVoiceId = "Hybl6rg76ZOcgqZqN5WN"; // Elli voice
+
+        // Generate audio for each part
+        const kidQuestionAudio = await generateSpeech(kidQuestion, kidVoiceId, 0.6, 0.8);
+        const rickResponseAudio = await generateSpeech(rickResponse, rickVoiceId, 0.4, 0.9);
+        const kidUnderstandingAudio = await generateSpeech(kidUnderstanding, kidVoiceId, 0.6, 0.8);
+
+        // Combine audio with gaps
+        return await combineAudioWithGaps([
+            { audio: kidQuestionAudio, gap: 1.0 },
+            { audio: rickResponseAudio, gap: 0.8 },
+            { audio: kidUnderstandingAudio, gap: 0 }
+        ]);
+    } catch (error) {
+        console.error('Dialogue conversion error:', error);
+        throw new Error('Failed to generate audio: ' + error.message);
+    }
+}
+
+        async function generateSpeech(text, voiceId, stability, similarityBoost) {
+            const response = await fetch(GENERATE_SPEECH_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    text,
+                    voiceId,
+                    stability,
+                    similarityBoost
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Text-to-speech API error: ${response.status} - ${errorText}`);
+            }
+
+            return await response.blob();
+        }
+
+        async function combineAudioWithGaps(audioSegments) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const buffers = [];
+                
+                // Convert all audio blobs to AudioBuffers
+                for (const segment of audioSegments) {
+                    const arrayBuffer = await segment.audio.arrayBuffer();
+                    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                    buffers.push({ buffer: audioBuffer, gap: segment.gap });
+                }
+                
+                // Calculate total duration
+                let totalDuration = 0;
+                buffers.forEach(item => {
+                    totalDuration += item.buffer.duration + item.gap;
+                });
+                
+                // Create a new buffer for the combined audio
+                const combinedBuffer = audioContext.createBuffer(
+                    buffers[0].buffer.numberOfChannels,
+                    Math.ceil(totalDuration * audioContext.sampleRate),
+                    audioContext.sampleRate
+                );
+                
+                // Copy audio data with gaps
+                let currentTime = 0;
+                buffers.forEach(item => {
+                    const startSample = Math.floor(currentTime * audioContext.sampleRate);
+                    
+                    for (let channel = 0; channel < item.buffer.numberOfChannels; channel++) {
+                        const sourceData = item.buffer.getChannelData(channel);
+                        const targetData = combinedBuffer.getChannelData(channel);
+                        
+                        for (let i = 0; i < sourceData.length; i++) {
+                            if (startSample + i < targetData.length) {
+                                targetData[startSample + i] = sourceData[i];
+                            }
+                        }
+                    }
+                    
+                    currentTime += item.buffer.duration + item.gap;
+                });
+                
+                // Convert back to blob
+                const length = combinedBuffer.length * combinedBuffer.numberOfChannels * 2;
+                const arrayBuffer = new ArrayBuffer(length);
+                const view = new DataView(arrayBuffer);
+                const channels = [];
+                
+                for (let i = 0; i < combinedBuffer.numberOfChannels; i++) {
+                    channels.push(combinedBuffer.getChannelData(i));
+                }
+                
+                let offset = 0;
+                for (let i = 0; i < combinedBuffer.length; i++) {
+                    for (let channel = 0; channel < combinedBuffer.numberOfChannels; channel++) {
+                        const sample = Math.max(-1, Math.min(1, channels[channel][i]));
+                        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                        offset += 2;
+                    }
+                }
+                
+                // Create WAV blob
+                const wavBlob = createWavBlob(arrayBuffer, combinedBuffer.sampleRate, combinedBuffer.numberOfChannels);
+                return wavBlob;
+                
+            } catch (error) {
+                console.error('Audio combining error:', error);
+                // Fallback: just return the first audio segment
+                return audioSegments[0].audio;
+            }
+        }
+        function createWavBlob(audioData, sampleRate, numberOfChannels) {
+            const header = new ArrayBuffer(44);
+            const view = new DataView(header);
+            
+            // WAV header
+            const writeString = (offset, string) => {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
             };
+            
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + audioData.byteLength, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, numberOfChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * numberOfChannels * 2, true);
+            view.setUint16(32, numberOfChannels * 2, true);
+            view.setUint16(34, 16, true);
+            writeString(36, 'data');
+            view.setUint32(40, audioData.byteLength, true);
+            
+            return new Blob([header, audioData], { type: 'audio/wav' });
+        }
+
+        // AssemblyAI integration for word timestamps
+        async function uploadToAssemblyAI(audioBlob) {
+            const response = await fetch(ASSEMBLYAI_UPLOAD_URL, {
+                method: 'POST',
+                headers: {
+                    'authorization': ASSEMBLYAI_API_KEY,
+                    'transfer-encoding': 'chunked'
+                },
+                body: audioBlob
+            });
+            if (!response.ok) {
+                const err = await response.text();
+                throw new Error(`AssemblyAI upload failed: ${response.status} ${err}`);
+            }
+            const data = await response.json();
+            return data.upload_url;
+        }
+
+        async function requestAssemblyAITranscription(audioUrl) {
+            const response = await fetch(ASSEMBLYAI_TRANSCRIPT_URL, {
+                method: 'POST',
+                headers: {
+                    'authorization': ASSEMBLYAI_API_KEY,
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    audio_url: audioUrl,
+                    punctuate: true,
+                    format_text: true
+                })
+            });
+            if (!response.ok) {
+                const err = await response.text();
+                throw new Error(`AssemblyAI transcript create failed: ${response.status} ${err}`);
+            }
+            const data = await response.json();
+            return data.id;
+        }
+
+        async function pollAssemblyAITranscript(transcriptId) {
+            const url = `${ASSEMBLYAI_TRANSCRIPT_URL}/${transcriptId}`;
+            while (true) {
+                const resp = await fetch(url, { headers: { 'authorization': ASSEMBLYAI_API_KEY } });
+                if (!resp.ok) {
+                    const err = await resp.text();
+                    throw new Error(`AssemblyAI polling failed: ${resp.status} ${err}`);
+                }
+                const data = await resp.json();
+                if (data.status === 'completed') return data;
+                if (data.status === 'error') throw new Error(`AssemblyAI transcription error: ${data.error}`);
+                await new Promise(r => setTimeout(r, 1500));
+            }
+        }
+
+      async function getAssemblyAIWordTimestamps(audioBlob) {
+    try {
+        console.log('Starting AssemblyAI transcription...');
+        
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'audio.wav');
+        
+        const response = await fetch(ASSEMBLYAI_API_URL, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('AssemblyAI API error:', errorText);
+            throw new Error(`AssemblyAI proxy error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('AssemblyAI response:', data);
+
+        // Your API returns the words array directly, not wrapped in an object
+        const words = Array.isArray(data) ? data : [];
+        
+        if (words.length === 0) {
+            console.warn('No words returned from AssemblyAI');
+            return [];
+        }
+
+        // Validate and format the word timestamps
+        const formattedWords = words.map(word => ({
+            text: word.text,
+            start: word.start, // AssemblyAI returns milliseconds
+            end: word.end,
+            confidence: word.confidence || 0.8
+        }));
+
+        console.log(`Successfully processed ${formattedWords.length} words from AssemblyAI`);
+        return formattedWords;
+        
+    } catch (error) {
+        console.error('AssemblyAI alignment failed:', error);
+        // Don't silently fail - let the user know what happened
+        showError(`Subtitle alignment failed: ${error.message}. Using estimated timing instead.`);
+        return [];
+    }
+}
+
+
+        
+function createSubtitleSegments(kidQuestion, rickResponse, kidUnderstanding) {
+    const segments = [];
+    let currentTime = 0;
+    
+    // Kid question segment
+    const kidDuration = estimateDuration(kidQuestion);
+    segments.push({
+        text: kidQuestion,
+        start: currentTime,
+        end: currentTime + kidDuration
+    });
+    currentTime += kidDuration + 1.0; // Add gap after kid question
+    
+    // Rick response segment
+    const rickDuration = estimateDuration(rickResponse);
+    segments.push({
+        text: rickResponse,
+        start: currentTime,
+        end: currentTime + rickDuration
+    });
+    currentTime += rickDuration + 0.8; // Add gap after Rick's response
+    
+    // Kid understanding segment
+    const understandingDuration = estimateDuration(kidUnderstanding);
+    segments.push({
+        text: kidUnderstanding,
+        start: currentTime,
+        end: currentTime + understandingDuration
+    });
+    
+    return segments;
+}
+
+        function estimateDuration(text) {
+            // Estimate speech duration based on word count (average 0.5 seconds per word)
+            const wordCount = text.split(' ').length;
+            return Math.max(2, wordCount * 0.5); // Minimum 2 seconds
+        }
+
+        // Show the full-screen video player and subtitles, hide the main UI
+        function showVideoPlayer() {
+            document.querySelector('.video-container').style.display = 'block';
+            document.querySelector('.subtitles').style.display = 'block';
+            document.querySelector('.container').style.display = 'none';
         }
 
         function displayResults(summary, blob) {
@@ -552,52 +1157,153 @@
             const audioUrl = URL.createObjectURL(blob);
             audioPlayer.src = audioUrl;
             
-            results.style.display = 'block';
-            logDebug('Document processing completed successfully', 'success');
-        }
+            // Get audio duration for video playback
+            const audio = new Audio();
+            audio.src = audioUrl;
+            audio.addEventListener('loadedmetadata', () => {
+                audioDuration = audio.duration;
 
-        // Debug functions
-        function createDebugFile(content, filename) {
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            
-            debugFiles.push({
-                name: filename,
-                content: content,
-                url: url,
-                timestamp: new Date().toISOString()
+                // Automatically show the video player after processing
+                setTimeout(() => {
+                    showVideoPlayer();
+                    playVideoWithAudio();
+                }, 1000);
             });
             
-            logDebug(`Created debug file: ${filename}`, 'info');
+            results.style.display = 'block';
+            results.scrollIntoView({ behavior: 'smooth' });
         }
 
-        function logDebug(message, type = 'info') {
-            const timestamp = new Date().toLocaleTimeString();
-            const entry = document.createElement('div');
-            entry.className = 'debug-entry';
+        function playVideoWithAudio() {
+            if (!audioBlob) {
+                showError("No audio available to play.");
+                return;
+            }
             
-            let messageClass = 'debug-message';
-            if (type === 'error') messageClass = 'debug-error';
-            if (type === 'success') messageClass = 'debug-success';
-            if (type === 'warning') messageClass = 'debug-warning';
+            // Reset video
+            minecraftVideo.currentTime = 0;
             
-            entry.innerHTML = `
-                <div class="debug-timestamp">[${timestamp}]</div>
-                <div class="${messageClass}">${message}</div>
-            `;
+            // Play the video
+            minecraftVideo.play();
             
-            debugLog.appendChild(entry);
-            debugLog.scrollTop = debugLog.scrollHeight;
+            // Play the audio using the existing audio element for accurate timing
+            const audioUrl = URL.createObjectURL(audioBlob);
+            audioPlayer.src = audioUrl;
+            audioPlayer.play();
+            
+            // Start subtitle display using the audio player's currentTime
+            startSubtitles(audioPlayer);
+            
+            // Pause the video and clean up when audio finishes
+            audioPlayer.onended = function() {
+                minecraftVideo.pause();
+                clearInterval(subtitleInterval);
+                subtitles.style.display = 'none';
+            };
         }
 
-        function clearDebugLog() {
-            debugLog.innerHTML = '';
+        function stopVideoPlayback() {
+            minecraftVideo.pause();
+            minecraftVideo.currentTime = 0;
+            
+            // Stop any playing audio
+            const allAudio = document.querySelectorAll('audio');
+            allAudio.forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+            });
+            
+            // Clear subtitle interval and hide subtitles
+            clearInterval(subtitleInterval);
+            subtitles.style.display = 'none';
+            currentSubtitleIndex = 0;
         }
+
+       
+function startSubtitles(audio) {
+    clearInterval(subtitleInterval);
+    
+    console.log('Starting subtitles with', wordTimestamps.length, 'words');
+    
+    // Use AssemblyAI word timestamps if available
+    if (wordTimestamps.length > 0) {
+        console.log('Using precise word-level timing from AssemblyAI');
+        
+        subtitleInterval = setInterval(() => {
+            const currentTime = audio.currentTime * 1000; // convert to milliseconds
+            
+            // Find words that should be displayed in a window around current time
+            const windowBefore = 1500; // 1.5 seconds before
+            const windowAfter = 2500;  // 2.5 seconds after
+            
+            const visibleWords = wordTimestamps.filter(word => {
+                return word.start >= (currentTime - windowBefore) && 
+                       word.start <= (currentTime + windowAfter);
+            });
+            
+            if (visibleWords.length > 0) {
+                // Create HTML for words with timing states
+                const wordsHtml = visibleWords.map(word => {
+                    let state = 'future';
+                    if (currentTime >= word.start && currentTime <= word.end) {
+                        state = 'current';
+                    } else if (currentTime > word.end) {
+                        state = 'past';
+                    }
+                    
+                    return `<span class="subtitle-word ${state}">${word.text}</span>`;
+                }).join(' ');
+                
+                subtitles.innerHTML = wordsHtml;
+                subtitles.style.display = 'block';
+            } else {
+                // No words in current window
+                subtitles.style.display = 'none';
+            }
+        }, 100); // Update every 100ms for smooth transitions
+        
+    } else {
+        console.log('Falling back to segment-based subtitles');
+        // Fall back to segment-based subtitles
+        subtitleInterval = setInterval(() => {
+            const currentTime = audio.currentTime;
+            
+            const currentSegment = subtitleSegments.find(segment => 
+                currentTime >= segment.start && currentTime <= segment.end
+            );
+            
+            if (currentSegment) {
+                // Split segment into smaller chunks for better display
+                const words = currentSegment.text.split(' ');
+                const maxWordsPerLine = 8;
+                
+                if (words.length <= maxWordsPerLine) {
+                    subtitles.textContent = currentSegment.text;
+                } else {
+                    // Show words progressively
+                    const segmentDuration = currentSegment.end - currentSegment.start;
+                    const timeInSegment = currentTime - currentSegment.start;
+                    const progressRatio = timeInSegment / segmentDuration;
+                    const wordsToShow = Math.min(words.length, Math.floor(progressRatio * words.length) + maxWordsPerLine);
+                    
+                    subtitles.textContent = words.slice(Math.max(0, wordsToShow - maxWordsPerLine), wordsToShow).join(' ');
+                }
+                
+                subtitles.style.display = 'block';
+            } else {
+                subtitles.style.display = 'none';
+            }
+        }, 100);
+    }
+}
 
         function showLoading(text) {
             loadingText.textContent = text;
             loading.style.display = 'block';
             progressBar.style.display = 'block';
+            
+            // Update Rick quote randomly
+            rickLoadingQuote.textContent = rickQuotes[Math.floor(Math.random() * rickQuotes.length)];
         }
 
         function hideLoading() {
@@ -608,6 +1314,8 @@
 
         function updateLoadingText(text) {
             loadingText.textContent = text;
+            // Update Rick quote
+            rickLoadingQuote.textContent = rickQuotes[Math.floor(Math.random() * rickQuotes.length)];
         }
 
         function updateProgress(percentage) {
@@ -617,7 +1325,6 @@
         function showError(message) {
             error.textContent = message;
             error.style.display = 'block';
-            logDebug(`Error: ${message}`, 'error');
         }
 
         function hideError() {
