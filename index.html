@@ -491,12 +491,12 @@
         
         <div class="main-content">
             <div class="upload-section" id="uploadSection">
-                <input type="file" id="fileInput" accept=".doc,.docx,.pdf,.txt" />
-                <h3>Drop your document here</h3>
-                <p>Supported formats: PDF, DOCX, TXT</p>
-                <br>
-                <button class="upload-button">Choose file</button>
-            </div>
+    <input type="file" id="fileInput" accept=".doc,.docx,.pdf,.txt" />
+    <h3>Drop your document here</h3>
+    <p>Supported formats: PDF, DOCX, TXT</p>
+    <br>
+    <button class="upload-button" id="chooseFileBtn">Choose file</button>
+</div>
             
             <div class="file-info" id="fileInfo">
                 <strong>Selected file:</strong> <span id="fileName"></span>
@@ -594,33 +594,38 @@
         let wordTimestamps = [];
 
         // Drag and drop functionality
-        uploadSection.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadSection.classList.add('dragover');
-        });
+        // Drag and drop functionality
+uploadSection.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadSection.classList.add('dragover');
+});
 
-        uploadSection.addEventListener('dragleave', () => {
-            uploadSection.classList.remove('dragover');
-        });
+uploadSection.addEventListener('dragleave', () => {
+    uploadSection.classList.remove('dragover');
+});
 
-        uploadSection.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadSection.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleFile(files[0]);
-            }
-        });
+uploadSection.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadSection.classList.remove('dragover');
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        handleFile(files[0]);
+    }
+});
 
-        uploadSection.addEventListener('click', () => {
-            fileInput.click();
-        });
+// Specific event listener for the "Choose file" button
+const chooseFileBtn = document.getElementById('chooseFileBtn');
+chooseFileBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent the uploadSection click event from firing
+    fileInput.click();
+});
 
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                handleFile(e.target.files[0]);
-            }
-        });
+// File input change event
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        handleFile(e.target.files[0]);
+    }
+});
 
         // Video control buttons
         playWithVideoBtn.addEventListener('click', playVideoWithAudio);
