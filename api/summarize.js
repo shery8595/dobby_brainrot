@@ -1,110 +1,56 @@
-export const runtime = 'edge';
+// pages/api/summarize.js
+export const config = {
+  runtime: 'edge',
+};
 
 export async function POST(request) {
   try {
-    // Parse the incoming form data
-    const formData = await request.formData();
-    const audioFile = formData.get('audio');
+    // Parse and validate input
+    const { text } = await request.json();
 
-    // Validate audio file
-    if (!audioFile) {
-      return new Response(JSON.stringify({ error: 'No audio file provided' }), {
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      return new Response(JSON.stringify({ error: 'Invalid or missing text input' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    // 🔹 Upload audio to AssemblyAI (with chunking)
-    async function uploadToAssemblyAI(file) {
-      const chunkSize = 5 * 1024 * 1024; // 5 MB
-      const buffer = new Uint8Array(await file.arrayBuffer());
+    // Truncate text if too long to avoid API limits
+    const maxInputLength = 12000;
+    const truncatedText = text.length > maxInputLength ? text.substring(0, maxInputLength) + '...' : text;
 
-      let uploadUrl = '';
-      for (let start = 0; start < buffer.length; start += chunkSize) {
-        const end = Math.min(start + chunkSize, buffer.length);
-        const chunk = buffer.slice(start, end);
-
-        const resp = await fetch('https://api.assemblyai.com/v2/upload', {
-          method: 'POST',
-          headers: {
-            authorization: process.env.ASSEMBLYAI_API_KEY,
-            'content-type': 'application/octet-stream',
-          },
-          body: chunk,
-        });
-
-        if (!resp.ok) {
-          const errorText = await resp.text();
-          throw new Error(`Chunk upload failed: ${resp.status} ${errorText}`);
-        }
-
-        const data = await resp.json();
-        uploadUrl = data.upload_url; // AssemblyAI returns the same upload_url each time
-      }
-
-      return uploadUrl;
-    }
-
-    const upload_url = await uploadToAssemblyAI(audioFile);
-
-    // 🔹 Request transcription (minimal valid schema)
-    const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
+    // Make request to Fireworks AI API
+    const response = await fetch('https://api.fireworks.ai/inference/v1/chat/completions', {
       method: 'POST',
       headers: {
-        authorization: process.env.ASSEMBLYAI_API_KEY,
-        'content-type': 'application/json',
+        'Authorization': `Bearer ${process.env.FIREWORKS_API_KEY}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        audio_url: upload_url,
-        punctuate: true,
+        model: 'accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new',
+        messages: [{
+          role: 'user',
+          content: `You are Rick Sanchez from Rick and Morty. Summarize the following document in your unique, snarky, and brilliant style. Keep it concise, under 30 words, and explain it like you're talking to Morty. Get to the point, and don't bore me with fluff! Document: ${truncatedText}`,
+        }],
+        max_tokens: 300,
+        temperature: 0.9,
       }),
     });
 
-    if (!transcriptResponse.ok) {
-      const errorText = await transcriptResponse.text();
-      throw new Error(`AssemblyAI transcript creation failed: ${transcriptResponse.status} ${errorText}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Fireworks AI API error: ${response.status} - ${errorText}`);
     }
 
-    const { id } = await transcriptResponse.json();
+    const data = await response.json();
+    const summary = data.choices[0].message.content.trim();
 
-    // 🔹 Poll for transcription results
-    const maxPollTime = 300000; // 5 min
-    const pollInterval = 3000;
-    let elapsedTime = 0;
-
-    while (elapsedTime < maxPollTime) {
-      const pollResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${id}`, {
-        headers: {
-          authorization: process.env.ASSEMBLYAI_API_KEY,
-        },
-      });
-
-      if (!pollResponse.ok) {
-        const errorText = await pollResponse.text();
-        throw new Error(`AssemblyAI polling failed: ${pollResponse.status} ${errorText}`);
-      }
-
-      const transcriptData = await pollResponse.json();
-
-      if (transcriptData.status === 'completed') {
-        // ✅ Return the words array with timestamps
-        return new Response(JSON.stringify(transcriptData.words || []), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
-
-      if (transcriptData.status === 'error') {
-        throw new Error(`AssemblyAI transcription error: ${transcriptData.error}`);
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
-      elapsedTime += pollInterval;
-    }
-
-    throw new Error('Transcription timed out after 5 minutes');
+    return new Response(JSON.stringify({ summary }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
-    console.error('AssemblyAI API error:', error);
+    console.error('Summarize API error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
