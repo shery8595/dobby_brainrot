@@ -14,27 +14,40 @@ export async function POST(request) {
       });
     }
 
-    // Convert File/Blob to ArrayBuffer (required for Edge runtime fetch)
-    const arrayBuffer = await audioFile.arrayBuffer();
+    // 🔹 Upload audio to AssemblyAI (with chunking)
+    async function uploadToAssemblyAI(file) {
+      const chunkSize = 5 * 1024 * 1024; // 5 MB
+      const buffer = new Uint8Array(await file.arrayBuffer());
 
-    // Upload audio to AssemblyAI
-    const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
-      method: 'POST',
-      headers: {
-        authorization: process.env.ASSEMBLYAI_API_KEY,
-        'content-type': 'application/octet-stream',
-      },
-      body: arrayBuffer,
-    });
+      let uploadUrl = '';
+      for (let start = 0; start < buffer.length; start += chunkSize) {
+        const end = Math.min(start + chunkSize, buffer.length);
+        const chunk = buffer.slice(start, end);
 
-    if (!uploadResponse.ok) {
-      const errorText = await uploadResponse.text();
-      throw new Error(`AssemblyAI upload failed: ${uploadResponse.status} ${errorText}`);
+        const resp = await fetch('https://api.assemblyai.com/v2/upload', {
+          method: 'POST',
+          headers: {
+            authorization: process.env.ASSEMBLYAI_API_KEY,
+            'content-type': 'application/octet-stream',
+          },
+          body: chunk,
+        });
+
+        if (!resp.ok) {
+          const errorText = await resp.text();
+          throw new Error(`Chunk upload failed: ${resp.status} ${errorText}`);
+        }
+
+        const data = await resp.json();
+        uploadUrl = data.upload_url; // AssemblyAI returns the same upload_url each time
+      }
+
+      return uploadUrl;
     }
 
-    const { upload_url } = await uploadResponse.json();
+    const upload_url = await uploadToAssemblyAI(audioFile);
 
-    // Request transcription with word-level timestamps
+    // 🔹 Request transcription (minimal valid schema)
     const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
       method: 'POST',
       headers: {
@@ -44,8 +57,6 @@ export async function POST(request) {
       body: JSON.stringify({
         audio_url: upload_url,
         punctuate: true,
-        format_text: true,
-        word_timestamps: true,   // ✅ Required for word-level timestamps
       }),
     });
 
@@ -56,9 +67,9 @@ export async function POST(request) {
 
     const { id } = await transcriptResponse.json();
 
-    // Poll for transcription results with a timeout
-    const maxPollTime = 120000; // 2 min (increase if needed)
-    const pollInterval = 2000;
+    // 🔹 Poll for transcription results
+    const maxPollTime = 300000; // 5 min
+    const pollInterval = 3000;
     let elapsedTime = 0;
 
     while (elapsedTime < maxPollTime) {
@@ -76,7 +87,7 @@ export async function POST(request) {
       const transcriptData = await pollResponse.json();
 
       if (transcriptData.status === 'completed') {
-        // ✅ Return the words array with start/end timestamps
+        // ✅ Return the words array with timestamps
         return new Response(JSON.stringify(transcriptData.words || []), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
@@ -91,7 +102,7 @@ export async function POST(request) {
       elapsedTime += pollInterval;
     }
 
-    throw new Error('Transcription timed out after 2 minutes');
+    throw new Error('Transcription timed out after 5 minutes');
   } catch (error) {
     console.error('AssemblyAI API error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
