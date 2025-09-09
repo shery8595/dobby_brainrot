@@ -1201,45 +1201,59 @@
         const currentTimeMs = Math.floor(currentTime * 1000);
         
         if (useWordTiming) {
-            // Find all words that should be visible now
-            const visibleWords = wordTimestamps.filter(word => 
-                currentTimeMs >= word.start && currentTimeMs <= word.end
-            );
+            // Find the current word being spoken
+            let currentWord = null;
+            let upcomingWords = [];
+            let recentWords = [];
             
-            // Find upcoming words for context
-            const upcomingWords = wordTimestamps.filter(word => 
-                currentTimeMs < word.start && word.start - currentTimeMs < 1000
-            ).slice(0, 3);
-            
-            // Find recently spoken words for context
-            const recentWords = wordTimestamps.filter(word => 
-                currentTimeMs > word.end && currentTimeMs - word.end < 800
-            ).slice(-2);
-            
-            // Combine all words to display
-            const allWords = [...recentWords, ...visibleWords, ...upcomingWords];
-            
-            if (allWords.length > 0) {
-                // Create HTML for the words with appropriate styling
-                const wordElements = allWords.map(word => {
-                    const isCurrent = visibleWords.includes(word);
-                    const isPast = recentWords.includes(word);
-                    const isFuture = upcomingWords.includes(word);
-                    
-                    let className = 'subtitle-word';
-                    if (isCurrent) className += ' current';
-                    if (isPast) className += ' past';
-                    if (isFuture) className += ' future';
-                    
-                    // Add some color variation for visual interest
-                    const colorIndex = wordTimestamps.indexOf(word) % 3;
-                    const colorClass = ['hl-red', 'hl-yellow', 'hl-green'][colorIndex];
-                    if (isCurrent) className += ` ${colorClass}`;
-                    
-                    return `<span class="${className}">${word.text}</span>`;
-                });
+            for (let i = 0; i < wordTimestamps.length; i++) {
+                const word = wordTimestamps[i];
                 
-                subtitles.innerHTML = wordElements.join(' ');
+                if (currentTimeMs >= word.start && currentTimeMs <= word.end) {
+                    currentWord = word;
+                    // Get a few words before and after
+                    recentWords = wordTimestamps.slice(Math.max(0, i - 2), i);
+                    upcomingWords = wordTimestamps.slice(i + 1, Math.min(i + 4, wordTimestamps.length));
+                    break;
+                }
+            }
+            
+            // If no current word, check if we're between words
+            if (!currentWord) {
+                for (let i = 0; i < wordTimestamps.length - 1; i++) {
+                    if (currentTimeMs > wordTimestamps[i].end && 
+                        currentTimeMs < wordTimestamps[i + 1].start) {
+                        // We're between words, show the last word and next word
+                        recentWords = [wordTimestamps[i]];
+                        upcomingWords = [wordTimestamps[i + 1]];
+                        break;
+                    }
+                }
+            }
+            
+            // Build the display text
+            let displayHTML = '';
+            
+            // Add recent words (faded)
+            recentWords.forEach(word => {
+                displayHTML += `<span class="subtitle-word past">${word.text}</span> `;
+            });
+            
+            // Add current word (highlighted)
+            if (currentWord) {
+                const colorIndex = wordTimestamps.indexOf(currentWord) % 3;
+                const colorClass = ['hl-red', 'hl-yellow', 'hl-green'][colorIndex];
+                displayHTML += `<span class="subtitle-word current ${colorClass}">${currentWord.text}</span> `;
+            }
+            
+            // Add upcoming words (faded)
+            upcomingWords.forEach(word => {
+                displayHTML += `<span class="subtitle-word future">${word.text}</span> `;
+            });
+            
+            // Update the subtitle element
+            if (displayHTML.trim()) {
+                subtitles.innerHTML = displayHTML;
                 subtitles.style.display = 'block';
             } else {
                 subtitles.style.display = 'none';
@@ -1262,7 +1276,7 @@
                 subtitles.style.display = 'none';
             }
         }
-    }, 50); // Update more frequently for smoother animation
+    }, 50); // Update frequently for smooth animation
 }
 
         function showLoading(text) {
