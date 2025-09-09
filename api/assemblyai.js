@@ -19,7 +19,7 @@ export async function POST(request) {
       method: 'POST',
       headers: {
         authorization: process.env.ASSEMBLYAI_API_KEY,
-        'content-type': audioFile.type || 'audio/wav',
+        'content-type': 'application/octet-stream',
       },
       body: audioFile,
     });
@@ -46,8 +46,7 @@ export async function POST(request) {
         auto_highlights: false,
         audio_start_from: 0,
         speaker_labels: false,
-        // CRITICAL: Enable word-level timestamps
-        timestamps: true,
+        timestamps: true, // CRITICAL: Enable word-level timestamps
         disfluencies: false,
       }),
     });
@@ -79,9 +78,8 @@ export async function POST(request) {
       const transcriptData = await pollResponse.json();
 
       if (transcriptData.status === 'completed') {
-        // Return just the words array
-        const words = transcriptData.words || [];
-        return new Response(JSON.stringify(words), {
+        // Return the words array with proper timing
+        return new Response(JSON.stringify(transcriptData.words || []), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         });
