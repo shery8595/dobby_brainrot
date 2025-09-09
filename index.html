@@ -680,7 +680,7 @@
                 // Convert dialogue to speech with gaps
                 audioBlob = await convertDialogueToSpeechWithGaps(kidQuestion, rickResponse, kidUnderstanding);
                 
-                // Create subtitle segments
+                // Create subtitle segments based on estimated durations
                 subtitleSegments = createSubtitleSegments(kidQuestion, rickResponse, kidUnderstanding);
 
                 // Try fetching precise word timestamps with AssemblyAI
@@ -1197,80 +1197,62 @@ function createSubtitleSegments(kidQuestion, rickResponse, kidUnderstanding) {
         function startSubtitles(audio) {
             clearInterval(subtitleInterval);
             
-            // Create word-level timestamps if we don't have them
-            if (wordTimestamps.length === 0) {
-                // Combine all dialogue parts for word timestamps
-                const fullDialogue = subtitleSegments.map(segment => segment.text).join(" ");
-                wordTimestamps = createWordTimestampsFromText(fullDialogue);
-            }
-            
-            subtitleInterval = setInterval(() => {
-                const currentTime = audio.currentTime * 1000; // convert to ms
-                const currentWords = [];
-                
-                // Find all words that should be visible now
-                for (let i = 0; i < wordTimestamps.length; i++) {
-                    const word = wordTimestamps[i];
-                    if (currentTime >= word.start && currentTime <= word.end) {
-                        currentWords.push({
-                            ...word,
-                            state: 'current'
-                        });
-                    } else if (currentTime > word.end) {
-                        currentWords.push({
-                            ...word,
-                            state: 'past'
-                        });
-                    } else if (currentTime < word.start) {
-                        currentWords.push({
-                            ...word,
-                            state: 'future'
-                        });
+            // Use AssemblyAI word timestamps if available, otherwise fall back to estimated segments
+            if (wordTimestamps.length > 0) {
+                // Use precise word-level timing from AssemblyAI
+                subtitleInterval = setInterval(() => {
+                    const currentTime = audio.currentTime * 1000; // convert to ms
+                    const currentWords = [];
+                    
+                    // Find all words that should be visible now (show a window around current time)
+                    const windowStart = Math.max(0, currentTime - 2000); // 2 seconds before
+                    const windowEnd = currentTime + 3000; // 3 seconds ahead
+                    
+                    for (let i = 0; i < wordTimestamps.length; i++) {
+                        const word = wordTimestamps[i];
+                        if (word.start >= windowStart && word.start <= windowEnd) {
+                            let state = 'future';
+                            if (currentTime >= word.start && currentTime <= word.end) {
+                                state = 'current';
+                            } else if (currentTime > word.end) {
+                                state = 'past';
+                            }
+                            
+                            currentWords.push({
+                                ...word,
+                                state: state
+                            });
+                        }
                     }
-                }
-                
-                // Only show a window of words around the current position
-                const visibleWords = getVisibleWordWindow(currentWords);
-                
-                // Update the subtitle element
-                if (visibleWords.length > 0) {
-                    subtitles.innerHTML = visibleWords.map(word => 
-                        `<span class="subtitle-word ${word.state}">${word.text}</span>`
-                    ).join(' ');
-                    subtitles.style.display = 'block';
-                } else {
-                    subtitles.style.display = 'none';
-                }
-            }, 50); // Update frequently for smooth animation
-        }
-
-        function getVisibleWordWindow(words) {
-            const currentIndex = words.findIndex(word => word.state === 'current');
-            if (currentIndex === -1) return [];
-            
-            const start = Math.max(0, currentIndex - 2);
-            const end = Math.min(words.length, currentIndex + 3);
-            return words.slice(start, end);
-        }
-
-        function createWordTimestampsFromText(text) {
-            const words = text.split(/\s+/);
-            const wordTimestamps = [];
-            let currentTime = 0;
-            const wordDuration = 500; // ms per word
-            
-            for (const word of words) {
-                if (word.trim()) {
-                    wordTimestamps.push({
-                        text: word,
-                        start: currentTime,
-                        end: currentTime + wordDuration
-                    });
-                    currentTime += wordDuration;
-                }
+                    
+                    // Update the subtitle element
+                    if (currentWords.length > 0) {
+                        subtitles.innerHTML = currentWords.map(word => 
+                            `<span class="subtitle-word ${word.state}">${word.text}</span>`
+                        ).join(' ');
+                        subtitles.style.display = 'block';
+                    } else {
+                        subtitles.style.display = 'none';
+                    }
+                }, 50); // Update frequently for smooth animation
+            } else {
+                // Fall back to segment-based subtitles
+                subtitleInterval = setInterval(() => {
+                    const currentTime = audio.currentTime;
+                    
+                    // Find current segment
+                    const currentSegment = subtitleSegments.find(segment => 
+                        currentTime >= segment.start && currentTime <= segment.end
+                    );
+                    
+                    if (currentSegment) {
+                        subtitles.textContent = currentSegment.text;
+                        subtitles.style.display = 'block';
+                    } else {
+                        subtitles.style.display = 'none';
+                    }
+                }, 100);
             }
-            
-            return wordTimestamps;
         }
 
         function showLoading(text) {
