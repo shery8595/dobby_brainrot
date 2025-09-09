@@ -491,12 +491,12 @@
         
         <div class="main-content">
             <div class="upload-section" id="uploadSection">
-    <input type="file" id="fileInput" accept=".doc,.docx,.pdf,.txt" />
-    <h3>Drop your document here</h3>
-    <p>Supported formats: PDF, DOCX, TXT</p>
-    <br>
-    <button class="upload-button" id="chooseFileBtn">Choose file</button>
-</div>
+                <input type="file" id="fileInput" accept=".doc,.docx,.pdf,.txt" />
+                <h3>Drop your document here</h3>
+                <p>Supported formats: PDF, DOCX, TXT</p>
+                <br>
+                <button class="upload-button">Choose file</button>
+            </div>
             
             <div class="file-info" id="fileInfo">
                 <strong>Selected file:</strong> <span id="fileName"></span>
@@ -560,20 +560,14 @@
         const playWithVideoBtn = document.getElementById('playWithVideo');
         const stopVideoBtn = document.getElementById('stopVideo');
 
-        // API configurations (loaded from Vercel environment variables)
-        const DOBBY_API_KEY = process.env.DOBBY_API_KEY;
-        const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
-        const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY;
+        // API configurations
+        const DOBBY_API_KEY = 'fw_3ZL5KPdymkEXgjmQgUz2yVRL';
+        const ELEVENLABS_API_KEY = 'sk_b2d53921eec19d89f82587763be30c03c986a06c39a2c290';
         const DOBBY_API_URL = 'https://api.fireworks.ai/inference/v1/chat/completions';
         const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1/text-to-speech';
+        const ASSEMBLYAI_API_KEY = 'b66e1ba142b447efb0989e2671525d20';
         const ASSEMBLYAI_UPLOAD_URL = 'https://api.assemblyai.com/v2/upload';
         const ASSEMBLYAI_TRANSCRIPT_URL = 'https://api.assemblyai.com/v2/transcript';
-
-        // Validate environment variables
-        if (!DOBBY_API_KEY || !ELEVENLABS_API_KEY || !ASSEMBLYAI_API_KEY) {
-            console.error('Missing required environment variables. Please set DOBBY_API_KEY, ELEVENLABS_API_KEY, and ASSEMBLYAI_API_KEY in Vercel.');
-            showError('Application configuration error. Please contact the administrator.');
-        }
 
         // Rick loading quotes
         const rickQuotes = [
@@ -594,38 +588,33 @@
         let wordTimestamps = [];
 
         // Drag and drop functionality
-        // Drag and drop functionality
-uploadSection.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    uploadSection.classList.add('dragover');
-});
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
 
-uploadSection.addEventListener('dragleave', () => {
-    uploadSection.classList.remove('dragover');
-});
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.classList.remove('dragover');
+        });
 
-uploadSection.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadSection.classList.remove('dragover');
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-        handleFile(files[0]);
-    }
-});
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
 
-// Specific event listener for the "Choose file" button
-const chooseFileBtn = document.getElementById('chooseFileBtn');
-chooseFileBtn.addEventListener('click', (e) => {
-    e.stopPropagation(); // Prevent the uploadSection click event from firing
-    fileInput.click();
-});
+        uploadSection.addEventListener('click', () => {
+            fileInput.click();
+        });
 
-// File input change event
-fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) {
-        handleFile(e.target.files[0]);
-    }
-});
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
 
         // Video control buttons
         playWithVideoBtn.addEventListener('click', playVideoWithAudio);
@@ -1358,4 +1347,5 @@ ${truncatedText}`
         }
     </script>
 </body>
+</html>
 </html>
