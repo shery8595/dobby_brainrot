@@ -561,11 +561,12 @@
         const stopVideoBtn = document.getElementById('stopVideo');
 
         // API configurations
-        const DOBBY_API_KEY = 'fw_3ZL5KPdymkEXgjmQgUz2yVRL';
-        const ELEVENLABS_API_KEY = 'sk_b2d53921eec19d89f82587763be30c03c986a06c39a2c290';
+         const SUMMARIZE_API_URL = '/api/summarize';
+        const GENERATE_SPEECH_API_URL = '/api/generate-speech';
+        const ASSEMBLYAI_API_URL = '/api/assemblyai';
+        
         const DOBBY_API_URL = 'https://api.fireworks.ai/inference/v1/chat/completions';
         const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1/text-to-speech';
-        const ASSEMBLYAI_API_KEY = 'b66e1ba142b447efb0989e2671525d20';
         const ASSEMBLYAI_UPLOAD_URL = 'https://api.assemblyai.com/v2/upload';
         const ASSEMBLYAI_TRANSCRIPT_URL = 'https://api.assemblyai.com/v2/transcript';
 
@@ -830,45 +831,26 @@
         }
 
         async function getSummaryFromDobby(text) {
-            // Limit text length to avoid API token limits
             const truncatedText = text.length > 12000 ? text.substring(0, 12000) + "..." : text;
             
-            const response = await fetch(DOBBY_API_URL, {
+            const response = await fetch(SUMMARIZE_API_URL, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${DOBBY_API_KEY}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    model: 'accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new',
-                    messages: [{
-                        role: 'user',
-                        content: `You are Rick Sanchez from Rick and Morty. A curious kid just asked you to explain a document. You need to provide a clear, entertaining explanation in Rick's characteristic style.
-
-Requirements:
-- Be condescending but educational (like explaining to Morty)
-- scientific jargon, interdimensional references
-- Make complex concepts accessible while showing off your genius
-- Include at least one "Morty" reference and one scientific comparison
-- Keep it engaging but informative (3-4 sentences)
-- Be sarcastic about the document's obviousness while still explaining it well
-
-Document to explain:
-${truncatedText}`
-                    }],
-                    max_tokens: 300,
-                    temperature: 0.9
+                    text: truncatedText
                 })
             });
 
             if (!response.ok) {
-                throw new Error(`LLM API error: ${response.status}`);
+                const errorData = await response.json();
+                throw new Error(`Summarization failed: ${errorData.error || response.status}`);
             }
 
             const data = await response.json();
-            return data.choices[0].message.content.trim();
+            return data.summary;
         }
-
         async function convertDialogueToSpeechWithGaps(kidQuestion, rickResponse, kidUnderstanding) {
     try {
         // Get available voices first
@@ -908,21 +890,16 @@ ${truncatedText}`
 }
 
         async function generateSpeech(text, voiceId, stability, similarityBoost) {
-            const response = await fetch(`${ELEVENLABS_API_URL}/${voiceId}`, {
+            const response = await fetch(GENERATE_SPEECH_API_URL, {
                 method: 'POST',
                 headers: {
-                    'xi-api-key': ELEVENLABS_API_KEY,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    text: text,
-                    model_id: 'eleven_monolingual_v1',
-                    voice_settings: {
-                        stability: stability,
-                        similarity_boost: similarityBoost,
-                        style: 0.8,
-                        use_speaker_boost: true
-                    }
+                    text,
+                    voiceId,
+                    stability,
+                    similarityBoost
                 })
             });
 
@@ -1090,12 +1067,26 @@ ${truncatedText}`
             }
         }
 
-        async function getAssemblyAIWordTimestamps(audioBlob) {
-            const uploadUrl = await uploadToAssemblyAI(audioBlob);
-            const transcriptId = await requestAssemblyAITranscription(uploadUrl);
-            const transcript = await pollAssemblyAITranscript(transcriptId);
-            if (!transcript.words || !Array.isArray(transcript.words)) return [];
-            return transcript.words.map(w => ({ text: w.text, start: w.start, end: w.end }));
+         async function getAssemblyAIWordTimestamps(audioBlob) {
+            try {
+                // First upload the audio to our proxy endpoint
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'audio.wav');
+                
+                const response = await fetch(ASSEMBLYAI_API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('AssemblyAI proxy error');
+                }
+
+                return await response.json();
+            } catch (err) {
+                console.warn('AssemblyAI alignment failed; using estimated segments.', err);
+                return [];
+            }
         }
 
         function createSubtitleSegments(kidQuestion, rickResponse, kidUnderstanding) {
