@@ -42,6 +42,7 @@
             height: 100%;
             z-index: 1;
             overflow: hidden;
+            display: block;
         }
         
         #minecraftVideo {
@@ -474,7 +475,8 @@
 <body>
     <div class="video-container">
         <video id="minecraftVideo" loop muted>
-            <source src="https://drive.google.com/uc?export=download&id=1ZAx6qnUllH6VjrlnAawDsX1X_PSuYnCq" type="video/mp4">
+            <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
         <div class="video-overlay"></div>
@@ -622,6 +624,17 @@
         // Video control buttons
         playWithVideoBtn.addEventListener('click', playVideoWithAudio);
         stopVideoBtn.addEventListener('click', stopVideoPlayback);
+
+        // Debug: Make video visible immediately for testing
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, making video visible for testing');
+            document.querySelector('.video-container').style.display = 'block';
+            document.querySelector('#minecraftVideo').style.display = 'block';
+            
+            // Try to play the video
+            const video = document.querySelector('#minecraftVideo');
+            video.play().catch(e => console.log('Video autoplay failed:', e));
+        });
 
         function handleFile(file) {
             // Validate file type
