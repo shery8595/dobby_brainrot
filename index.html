@@ -626,54 +626,6 @@
         stopVideoBtn.addEventListener('click', stopVideoPlayback);
 
         // Topic to video mapping
-        const topicVideos = {
-            'neural': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-            'network': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-            'ai': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-            'machine': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-            'learning': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-            'data': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-            'science': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-            'research': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-            'technology': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-            'computer': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-            'programming': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-            'code': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-            'business': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-            'finance': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-            'economy': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-            'medical': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-            'health': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-            'biology': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-            'space': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-            'physics': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-            'chemistry': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-            'math': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-            'mathematics': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-            'default': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
-        };
-
-        function selectVideoForTopic(topic) {
-            const lowerTopic = topic.toLowerCase();
-            
-            // Find the best matching video based on topic keywords
-            for (const [keyword, videoUrl] of Object.entries(topicVideos)) {
-                if (lowerTopic.includes(keyword)) {
-                    console.log(`Selected video for topic "${topic}": ${keyword} -> ${videoUrl}`);
-                    return videoUrl;
-                }
-            }
-            
-            console.log(`No specific video found for topic "${topic}", using default`);
-            return topicVideos.default;
-        }
-
-        function updateVideoSource(videoUrl) {
-            const video = document.querySelector('#minecraftVideo');
-            video.src = videoUrl;
-            video.load(); // Reload the video with new source
-            console.log('Video source updated to:', videoUrl);
-        }
 
         // Debug: Make video visible immediately for testing
         document.addEventListener('DOMContentLoaded', function() {
@@ -682,7 +634,7 @@
             document.querySelector('#minecraftVideo').style.display = 'block';
             
             // Set default video
-            updateVideoSource(topicVideos.default);
+            setVideoForTopic('default');
             
             // Try to play the video
             const video = document.querySelector('#minecraftVideo');
@@ -807,7 +759,7 @@
             
             // Video database with free, publicly available videos
             const videoDatabase = {
-                // Technology & AI
+                // Technology & AI - Dynamic tech visuals
                 'neural': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
                 'network': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
                 'artificial': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
@@ -821,8 +773,9 @@
                 'code': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
                 'data': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
                 'database': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                'technology': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
                 
-                // Science & Nature
+                // Science & Nature - Nature and scientific visuals
                 'science': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
                 'biology': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
                 'chemistry': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
@@ -831,8 +784,9 @@
                 'environment': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
                 'climate': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
                 'energy': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+                'research': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
                 
-                // Business & Finance
+                // Business & Finance - Professional and dynamic visuals
                 'business': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
                 'finance': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
                 'economy': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
@@ -841,7 +795,7 @@
                 'management': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
                 'strategy': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
                 
-                // Health & Medicine
+                // Health & Medicine - Calming and medical visuals
                 'health': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
                 'medical': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
                 'medicine': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
@@ -849,15 +803,14 @@
                 'therapy': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
                 'patient': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
                 
-                // Education & Research
+                // Education & Research - Academic and learning visuals
                 'education': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-                'research': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
                 'study': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
                 'academic': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
                 'university': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
                 'student': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
                 
-                // Space & Astronomy
+                // Space & Astronomy - Cosmic and space visuals
                 'space': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
                 'astronomy': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
                 'planet': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
@@ -887,6 +840,18 @@
             // Update video source
             video.src = videoUrl;
             video.load(); // Reload the video with new source
+            
+            // Make sure video is ready to play
+            video.onloadeddata = function() {
+                console.log(`Video for topic "${topic}" loaded successfully: ${videoUrl}`);
+            };
+            
+            video.onerror = function(e) {
+                console.error(`Failed to load video for topic "${topic}": ${videoUrl}`, e);
+                // Fallback to default video
+                video.src = getTopicVideo('default');
+                video.load();
+            };
             
             console.log(`Setting video for topic "${topic}": ${videoUrl}`);
         }
