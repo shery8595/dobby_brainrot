@@ -531,7 +531,7 @@
                 
                 <div class="video-controls">
                     <button class="video-button" id="playWithVideo">Play with background video</button>
-                    <button class="video-button" id="stopVideo">Stop video</button>
+                    <button class="video-button" id="stopVideo">Back to document</button>
                 </div>
             </div>
         </div>
@@ -623,23 +623,19 @@
 
         // Video control buttons
         playWithVideoBtn.addEventListener('click', playVideoWithAudio);
-        stopVideoBtn.addEventListener('click', stopVideoPlayback);
+        stopVideoBtn.addEventListener('click', hideVideoPlayer);
 
         // Topic to video mapping
 
-        // Debug: Make video visible immediately for testing
+        // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Page loaded, making video visible for testing');
-            document.querySelector('.video-container').style.display = 'block';
+            console.log('Page loaded, initializing...');
             
-            // Set default video
+            // Hide video container initially
+            document.querySelector('.video-container').style.display = 'none';
+            
+            // Set default video but don't play it yet
             setVideoForTopic('default');
-            
-            // Try to play the video (only for video elements, not iframes)
-            const video = document.querySelector('#minecraftVideo');
-            if (video && video.tagName === 'VIDEO') {
-                video.play().catch(e => console.log('Video autoplay failed:', e));
-            }
         });
 
         function handleFile(file) {
@@ -1305,6 +1301,73 @@ function createSubtitleSegments(kidQuestion, rickResponse, kidUnderstanding) {
             document.querySelector('.video-container').style.display = 'block';
             document.querySelector('.subtitles').style.display = 'block';
             document.querySelector('.container').style.display = 'none';
+            
+            // Add back button to video player
+            addBackButton();
+        }
+        
+        function addBackButton() {
+            // Remove existing back button if it exists
+            const existingBackBtn = document.getElementById('backButton');
+            if (existingBackBtn) {
+                existingBackBtn.remove();
+            }
+            
+            // Create back button
+            const backButton = document.createElement('button');
+            backButton.id = 'backButton';
+            backButton.innerHTML = '← Back to Document';
+            backButton.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1000;
+                background: rgba(0, 0, 0, 0.8);
+                color: #00ff41;
+                border: 2px solid #00ff41;
+                padding: 12px 20px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                backdrop-filter: blur(10px);
+            `;
+            
+            // Add hover effects
+            backButton.addEventListener('mouseenter', () => {
+                backButton.style.background = '#00ff41';
+                backButton.style.color = '#000';
+                backButton.style.transform = 'scale(1.05)';
+            });
+            
+            backButton.addEventListener('mouseleave', () => {
+                backButton.style.background = 'rgba(0, 0, 0, 0.8)';
+                backButton.style.color = '#00ff41';
+                backButton.style.transform = 'scale(1)';
+            });
+            
+            // Add click handler
+            backButton.addEventListener('click', () => {
+                hideVideoPlayer();
+            });
+            
+            document.body.appendChild(backButton);
+        }
+        
+        function hideVideoPlayer() {
+            document.querySelector('.video-container').style.display = 'none';
+            document.querySelector('.subtitles').style.display = 'none';
+            document.querySelector('.container').style.display = 'block';
+            
+            // Remove back button
+            const backButton = document.getElementById('backButton');
+            if (backButton) {
+                backButton.remove();
+            }
+            
+            // Stop any playing audio and video
+            stopVideoPlayback();
         }
 
         function displayResults(summary, blob) {
@@ -1319,12 +1382,12 @@ function createSubtitleSegments(kidQuestion, rickResponse, kidUnderstanding) {
             audio.src = audioUrl;
             audio.addEventListener('loadedmetadata', () => {
                 audioDuration = audio.duration;
-
-                // Automatically show the video player after processing
-                setTimeout(() => {
-                    showVideoPlayer();
-                    playVideoWithAudio();
-                }, 1000);
+                
+                // Only show video player after everything is ready
+                showVideoPlayer();
+                
+                // Don't auto-play, wait for user to click play button
+                console.log('Document processing complete. Video ready to play.');
             });
             
             results.style.display = 'block';
