@@ -631,14 +631,15 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Page loaded, making video visible for testing');
             document.querySelector('.video-container').style.display = 'block';
-            document.querySelector('#minecraftVideo').style.display = 'block';
             
             // Set default video
             setVideoForTopic('default');
             
-            // Try to play the video
+            // Try to play the video (only for video elements, not iframes)
             const video = document.querySelector('#minecraftVideo');
-            video.play().catch(e => console.log('Video autoplay failed:', e));
+            if (video && video.tagName === 'VIDEO') {
+                video.play().catch(e => console.log('Video autoplay failed:', e));
+            }
         });
 
         function handleFile(file) {
@@ -789,37 +790,37 @@
         function getTopicVideo(topic) {
             const topicLower = topic.toLowerCase();
             
-            // Video database with Google Drive direct URLs
+            // Video database with Google Drive embed URLs
             const videoDatabase = {
                 // Computer - Technology and programming
-                'computer': 'https://drive.google.com/uc?export=download&id=1kzjtYOxwpNYF1QgeBRbDYsrm2Xkh-GaY',
-                'technology': 'https://drive.google.com/uc?export=download&id=1kzjtYOxwpNYF1QgeBRbDYsrm2Xkh-GaY',
-                'programming': 'https://drive.google.com/uc?export=download&id=1kzjtYOxwpNYF1QgeBRbDYsrm2Xkh-GaY',
-                'tech': 'https://drive.google.com/uc?export=download&id=1kzjtYOxwpNYF1QgeBRbDYsrm2Xkh-GaY',
+                'computer': 'https://drive.google.com/file/d/1kzjtYOxwpNYF1QgeBRbDYsrm2Xkh-GaY/preview',
+                'technology': 'https://drive.google.com/file/d/1kzjtYOxwpNYF1QgeBRbDYsrm2Xkh-GaY/preview',
+                'programming': 'https://drive.google.com/file/d/1kzjtYOxwpNYF1QgeBRbDYsrm2Xkh-GaY/preview',
+                'tech': 'https://drive.google.com/file/d/1kzjtYOxwpNYF1QgeBRbDYsrm2Xkh-GaY/preview',
                 
                 // Health - Medical and wellness
-                'health': 'https://drive.google.com/uc?export=download&id=1i4hF6Z0Ib4ChyHjluCSPffa7TSQ5m-Go',
-                'medical': 'https://drive.google.com/uc?export=download&id=1i4hF6Z0Ib4ChyHjluCSPffa7TSQ5m-Go',
-                'medicine': 'https://drive.google.com/uc?export=download&id=1i4hF6Z0Ib4ChyHjluCSPffa7TSQ5m-Go',
-                'healthcare': 'https://drive.google.com/uc?export=download&id=1i4hF6Z0Ib4ChyHjluCSPffa7TSQ5m-Go',
+                'health': 'https://drive.google.com/file/d/1i4hF6Z0Ib4ChyHjluCSPffa7TSQ5m-Go/preview',
+                'medical': 'https://drive.google.com/file/d/1i4hF6Z0Ib4ChyHjluCSPffa7TSQ5m-Go/preview',
+                'medicine': 'https://drive.google.com/file/d/1i4hF6Z0Ib4ChyHjluCSPffa7TSQ5m-Go/preview',
+                'healthcare': 'https://drive.google.com/file/d/1i4hF6Z0Ib4ChyHjluCSPffa7TSQ5m-Go/preview',
                 
                 // Business/Finance - Professional and financial
-                'business/finance': 'https://drive.google.com/uc?export=download&id=1hLvk6P_tn3rScDpZbl6YDArQQFmX7AbF',
-                'business': 'https://drive.google.com/uc?export=download&id=1hLvk6P_tn3rScDpZbl6YDArQQFmX7AbF',
-                'finance': 'https://drive.google.com/uc?export=download&id=1hLvk6P_tn3rScDpZbl6YDArQQFmX7AbF',
-                'economy': 'https://drive.google.com/uc?export=download&id=1hLvk6P_tn3rScDpZbl6YDArQQFmX7AbF',
+                'business/finance': 'https://drive.google.com/file/d/1hLvk6P_tn3rScDpZbl6YDArQQFmX7AbF/preview',
+                'business': 'https://drive.google.com/file/d/1hLvk6P_tn3rScDpZbl6YDArQQFmX7AbF/preview',
+                'finance': 'https://drive.google.com/file/d/1hLvk6P_tn3rScDpZbl6YDArQQFmX7AbF/preview',
+                'economy': 'https://drive.google.com/file/d/1hLvk6P_tn3rScDpZbl6YDArQQFmX7AbF/preview',
                 
                 // AI - Artificial intelligence and automation
-                'ai': 'https://drive.google.com/uc?export=download&id=1nifqZ3vCnD9Qxf2wYjpXyc-pEs2QK5qU',
-                'artificial intelligence': 'https://drive.google.com/uc?export=download&id=1nifqZ3vCnD9Qxf2wYjpXyc-pEs2QK5qU',
-                'machine learning': 'https://drive.google.com/uc?export=download&id=1nifqZ3vCnD9Qxf2wYjpXyc-pEs2QK5qU',
-                'automation': 'https://drive.google.com/uc?export=download&id=1nifqZ3vCnD9Qxf2wYjpXyc-pEs2QK5qU',
+                'ai': 'https://drive.google.com/file/d/1nifqZ3vCnD9Qxf2wYjpXyc-pEs2QK5qU/preview',
+                'artificial intelligence': 'https://drive.google.com/file/d/1nifqZ3vCnD9Qxf2wYjpXyc-pEs2QK5qU/preview',
+                'machine learning': 'https://drive.google.com/file/d/1nifqZ3vCnD9Qxf2wYjpXyc-pEs2QK5qU/preview',
+                'automation': 'https://drive.google.com/file/d/1nifqZ3vCnD9Qxf2wYjpXyc-pEs2QK5qU/preview',
                 
                 // Food - Culinary and nutrition
-                'food': 'https://drive.google.com/uc?export=download&id=1bdZfudFFthXln0dlNPE-zVM2tw7B0fhJ',
-                'cooking': 'https://drive.google.com/uc?export=download&id=1bdZfudFFthXln0dlNPE-zVM2tw7B0fhJ',
-                'culinary': 'https://drive.google.com/uc?export=download&id=1bdZfudFFthXln0dlNPE-zVM2tw7B0fhJ',
-                'nutrition': 'https://drive.google.com/uc?export=download&id=1bdZfudFFthXln0dlNPE-zVM2tw7B0fhJ',
+                'food': 'https://drive.google.com/file/d/1bdZfudFFthXln0dlNPE-zVM2tw7B0fhJ/preview',
+                'cooking': 'https://drive.google.com/file/d/1bdZfudFFthXln0dlNPE-zVM2tw7B0fhJ/preview',
+                'culinary': 'https://drive.google.com/file/d/1bdZfudFFthXln0dlNPE-zVM2tw7B0fhJ/preview',
+                'nutrition': 'https://drive.google.com/file/d/1bdZfudFFthXln0dlNPE-zVM2tw7B0fhJ/preview',
                 
                 // Default fallback
                 'default': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
@@ -842,12 +843,36 @@
         }
 
         function setVideoForTopic(topic) {
-            const video = document.getElementById('minecraftVideo');
+            const videoContainer = document.querySelector('.video-container');
             const videoUrl = getTopicVideo(topic);
             
-            // Update video source
-            video.src = videoUrl;
-            video.load(); // Reload the video with new source
+            // Check if it's a Google Drive URL (needs iframe) or regular video URL
+            if (videoUrl.includes('drive.google.com')) {
+                // Use iframe for Google Drive videos
+                videoContainer.innerHTML = `
+                    <iframe id="minecraftVideo" 
+                            src="${videoUrl}" 
+                            width="100%" 
+                            height="100%" 
+                            frameborder="0" 
+                            allow="autoplay; encrypted-media" 
+                            allowfullscreen
+                            style="position: absolute; top: 50%; left: 50%; min-width: 100%; min-height: 100%; transform: translateX(-50%) translateY(-50%); object-fit: cover;">
+                    </iframe>
+                    <div class="video-overlay"></div>
+                `;
+                console.log(`Setting Google Drive iframe for topic "${topic}": ${videoUrl}`);
+            } else {
+                // Use regular video element for other URLs
+                videoContainer.innerHTML = `
+                    <video id="minecraftVideo" loop muted>
+                        <source src="${videoUrl}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="video-overlay"></div>
+                `;
+                
+                const video = document.getElementById('minecraftVideo');
             
             // Make sure video is ready to play
             video.onloadeddata = function() {
@@ -857,11 +882,11 @@
             video.onerror = function(e) {
                 console.error(`Failed to load video for topic "${topic}": ${videoUrl}`, e);
                 // Fallback to default video
-                video.src = getTopicVideo('default');
-                video.load();
+                    setVideoForTopic('default');
             };
             
             console.log(`Setting video for topic "${topic}": ${videoUrl}`);
+            }
         }
 
         function generateKidQuestion(topic, filename) {
@@ -1312,11 +1337,18 @@ function createSubtitleSegments(kidQuestion, rickResponse, kidUnderstanding) {
                 return;
             }
             
+            const minecraftVideo = document.getElementById('minecraftVideo');
+            
+            // Handle iframe (Google Drive) vs video element
+            if (minecraftVideo.tagName === 'IFRAME') {
+                // For iframe, we can't control playback directly, just let it play
+                console.log('Playing Google Drive video via iframe');
+            } else {
             // Reset video
             minecraftVideo.currentTime = 0;
-            
             // Play the video
             minecraftVideo.play();
+            }
             
             // Play the audio using the existing audio element for accurate timing
             const audioUrl = URL.createObjectURL(audioBlob);
@@ -1328,15 +1360,23 @@ function createSubtitleSegments(kidQuestion, rickResponse, kidUnderstanding) {
             
             // Pause the video and clean up when audio finishes
             audioPlayer.onended = function() {
+                if (minecraftVideo.tagName === 'VIDEO') {
                 minecraftVideo.pause();
+                }
                 clearInterval(subtitleInterval);
                 subtitles.style.display = 'none';
             };
         }
 
         function stopVideoPlayback() {
-            minecraftVideo.pause();
-            minecraftVideo.currentTime = 0;
+            const minecraftVideo = document.getElementById('minecraftVideo');
+            
+            // Handle iframe vs video element
+            if (minecraftVideo && minecraftVideo.tagName === 'VIDEO') {
+                minecraftVideo.pause();
+                minecraftVideo.currentTime = 0;
+            }
+            // For iframe, we can't control playback directly
             
             // Stop any playing audio
             const allAudio = document.querySelectorAll('audio');
