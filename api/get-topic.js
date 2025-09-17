@@ -35,12 +35,11 @@ export async function POST(request) {
                         content: `You are Dobby, an AI assistant that analyzes documents and selects the most appropriate video topic category. 
 
 Available video categories:
-- Technology & AI (neural, network, artificial, intelligence, machine, learning, algorithm, computer, software, programming, code, data, database, technology)
-- Science & Nature (science, biology, chemistry, physics, nature, environment, climate, energy, research)
-- Business & Finance (business, finance, economy, market, investment, management, strategy)
-- Health & Medicine (health, medical, medicine, treatment, therapy, patient)
-- Education & Research (education, study, academic, university, student)
-- Space & Astronomy (space, astronomy, planet, universe, galaxy, cosmic)
+- computer (technology, programming, software, hardware, coding, development, tech, digital, internet, cybersecurity, data, algorithms)
+- health (medical, medicine, healthcare, fitness, wellness, treatment, therapy, patient, doctor, hospital, nutrition, mental health)
+- business/finance (business, finance, economy, market, investment, management, strategy, money, banking, trading, entrepreneurship, corporate)
+- ai (artificial intelligence, machine learning, neural networks, automation, robotics, deep learning, data science, algorithms, smart systems)
+- food (cooking, recipes, nutrition, restaurants, culinary, ingredients, dining, cuisine, kitchen, chef, food industry, agriculture)
 
 Analyze the given document and respond with ONLY the most relevant category name from the list above. If the document doesn't clearly fit any category, respond with "default".`
                     },
