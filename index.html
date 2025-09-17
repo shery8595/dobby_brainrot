@@ -790,37 +790,37 @@
         function getTopicVideo(topic) {
             const topicLower = topic.toLowerCase();
             
-            // Video database with Google Drive embed URLs
+            // Video database with Vimeo embed URLs
             const videoDatabase = {
                 // Computer - Technology and programming
-                'computer': 'https://drive.google.com/file/d/1kzjtYOxwpNYF1QgeBRbDYsrm2Xkh-GaY/preview',
-                'technology': 'https://drive.google.com/file/d/1kzjtYOxwpNYF1QgeBRbDYsrm2Xkh-GaY/preview',
-                'programming': 'https://drive.google.com/file/d/1kzjtYOxwpNYF1QgeBRbDYsrm2Xkh-GaY/preview',
-                'tech': 'https://drive.google.com/file/d/1kzjtYOxwpNYF1QgeBRbDYsrm2Xkh-GaY/preview',
+                'computer': 'https://player.vimeo.com/video/1119359977?autoplay=1&loop=1&muted=1&background=1',
+                'technology': 'https://player.vimeo.com/video/1119359977?autoplay=1&loop=1&muted=1&background=1',
+                'programming': 'https://player.vimeo.com/video/1119359977?autoplay=1&loop=1&muted=1&background=1',
+                'tech': 'https://player.vimeo.com/video/1119359977?autoplay=1&loop=1&muted=1&background=1',
                 
                 // Health - Medical and wellness
-                'health': 'https://drive.google.com/file/d/1i4hF6Z0Ib4ChyHjluCSPffa7TSQ5m-Go/preview',
-                'medical': 'https://drive.google.com/file/d/1i4hF6Z0Ib4ChyHjluCSPffa7TSQ5m-Go/preview',
-                'medicine': 'https://drive.google.com/file/d/1i4hF6Z0Ib4ChyHjluCSPffa7TSQ5m-Go/preview',
-                'healthcare': 'https://drive.google.com/file/d/1i4hF6Z0Ib4ChyHjluCSPffa7TSQ5m-Go/preview',
+                'health': 'https://player.vimeo.com/video/1119360062?autoplay=1&loop=1&muted=1&background=1',
+                'medical': 'https://player.vimeo.com/video/1119360062?autoplay=1&loop=1&muted=1&background=1',
+                'medicine': 'https://player.vimeo.com/video/1119360062?autoplay=1&loop=1&muted=1&background=1',
+                'healthcare': 'https://player.vimeo.com/video/1119360062?autoplay=1&loop=1&muted=1&background=1',
                 
                 // Business/Finance - Professional and financial
-                'business/finance': 'https://drive.google.com/file/d/1hLvk6P_tn3rScDpZbl6YDArQQFmX7AbF/preview',
-                'business': 'https://drive.google.com/file/d/1hLvk6P_tn3rScDpZbl6YDArQQFmX7AbF/preview',
-                'finance': 'https://drive.google.com/file/d/1hLvk6P_tn3rScDpZbl6YDArQQFmX7AbF/preview',
-                'economy': 'https://drive.google.com/file/d/1hLvk6P_tn3rScDpZbl6YDArQQFmX7AbF/preview',
+                'business/finance': 'https://player.vimeo.com/video/1119360025?autoplay=1&loop=1&muted=1&background=1',
+                'business': 'https://player.vimeo.com/video/1119360025?autoplay=1&loop=1&muted=1&background=1',
+                'finance': 'https://player.vimeo.com/video/1119360025?autoplay=1&loop=1&muted=1&background=1',
+                'economy': 'https://player.vimeo.com/video/1119360025?autoplay=1&loop=1&muted=1&background=1',
                 
                 // AI - Artificial intelligence and automation
-                'ai': 'https://drive.google.com/file/d/1nifqZ3vCnD9Qxf2wYjpXyc-pEs2QK5qU/preview',
-                'artificial intelligence': 'https://drive.google.com/file/d/1nifqZ3vCnD9Qxf2wYjpXyc-pEs2QK5qU/preview',
-                'machine learning': 'https://drive.google.com/file/d/1nifqZ3vCnD9Qxf2wYjpXyc-pEs2QK5qU/preview',
-                'automation': 'https://drive.google.com/file/d/1nifqZ3vCnD9Qxf2wYjpXyc-pEs2QK5qU/preview',
+                'ai': 'https://player.vimeo.com/video/1119360199?autoplay=1&loop=1&muted=1&background=1',
+                'artificial intelligence': 'https://player.vimeo.com/video/1119360199?autoplay=1&loop=1&muted=1&background=1',
+                'machine learning': 'https://player.vimeo.com/video/1119360199?autoplay=1&loop=1&muted=1&background=1',
+                'automation': 'https://player.vimeo.com/video/1119360199?autoplay=1&loop=1&muted=1&background=1',
                 
                 // Food - Culinary and nutrition
-                'food': 'https://drive.google.com/file/d/1bdZfudFFthXln0dlNPE-zVM2tw7B0fhJ/preview',
-                'cooking': 'https://drive.google.com/file/d/1bdZfudFFthXln0dlNPE-zVM2tw7B0fhJ/preview',
-                'culinary': 'https://drive.google.com/file/d/1bdZfudFFthXln0dlNPE-zVM2tw7B0fhJ/preview',
-                'nutrition': 'https://drive.google.com/file/d/1bdZfudFFthXln0dlNPE-zVM2tw7B0fhJ/preview',
+                'food': 'https://player.vimeo.com/video/1119360151?autoplay=1&loop=1&muted=1&background=1',
+                'cooking': 'https://player.vimeo.com/video/1119360151?autoplay=1&loop=1&muted=1&background=1',
+                'culinary': 'https://player.vimeo.com/video/1119360151?autoplay=1&loop=1&muted=1&background=1',
+                'nutrition': 'https://player.vimeo.com/video/1119360151?autoplay=1&loop=1&muted=1&background=1',
                 
                 // Default fallback
                 'default': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
@@ -846,26 +846,26 @@
             const videoContainer = document.querySelector('.video-container');
             const videoUrl = getTopicVideo(topic);
             
-            // Check if it's a Google Drive URL (needs iframe) or regular video URL
-            if (videoUrl.includes('drive.google.com')) {
-                // Use iframe for Google Drive videos
+            // Check if it's a Vimeo URL (needs iframe) or regular video URL
+            if (videoUrl.includes('player.vimeo.com')) {
+                // Use iframe for Vimeo videos
                 videoContainer.innerHTML = `
                     <iframe id="minecraftVideo" 
                             src="${videoUrl}" 
                             width="100%" 
                             height="100%" 
                             frameborder="0" 
-                            allow="autoplay; encrypted-media" 
+                            allow="autoplay; fullscreen; picture-in-picture" 
                             allowfullscreen
                             style="position: absolute; top: 50%; left: 50%; min-width: 100%; min-height: 100%; transform: translateX(-50%) translateY(-50%); object-fit: cover;">
                     </iframe>
                     <div class="video-overlay"></div>
                 `;
-                console.log(`Setting Google Drive iframe for topic "${topic}": ${videoUrl}`);
+                console.log(`Setting Vimeo iframe for topic "${topic}": ${videoUrl}`);
             } else {
                 // Use regular video element for other URLs
                 videoContainer.innerHTML = `
-                    <video id="minecraftVideo" loop muted>
+                    <video id="minecraftVideo" loop muted autoplay>
                         <source src="${videoUrl}" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
@@ -873,19 +873,19 @@
                 `;
                 
                 const video = document.getElementById('minecraftVideo');
-            
-            // Make sure video is ready to play
-            video.onloadeddata = function() {
-                console.log(`Video for topic "${topic}" loaded successfully: ${videoUrl}`);
-            };
-            
-            video.onerror = function(e) {
-                console.error(`Failed to load video for topic "${topic}": ${videoUrl}`, e);
-                // Fallback to default video
+                
+                // Make sure video is ready to play
+                video.onloadeddata = function() {
+                    console.log(`Video for topic "${topic}" loaded successfully: ${videoUrl}`);
+                };
+                
+                video.onerror = function(e) {
+                    console.error(`Failed to load video for topic "${topic}": ${videoUrl}`, e);
+                    // Fallback to default video
                     setVideoForTopic('default');
-            };
-            
-            console.log(`Setting video for topic "${topic}": ${videoUrl}`);
+                };
+                
+                console.log(`Setting video for topic "${topic}": ${videoUrl}`);
             }
         }
 
