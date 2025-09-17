@@ -564,8 +564,8 @@
          const SUMMARIZE_API_URL = '/api/summarize';
         const GENERATE_SPEECH_API_URL = '/api/generate-speech';
         const ASSEMBLYAI_API_URL = '/api/assemblyai';
+        const GET_TOPIC_API_URL = '/api/get-topic';
         
-        const DOBBY_API_URL = 'https://api.fireworks.ai/inference/v1/chat/completions';
         const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1/text-to-speech';
         const ASSEMBLYAI_UPLOAD_URL = 'https://api.assemblyai.com/v2/upload';
         const ASSEMBLYAI_TRANSCRIPT_URL = 'https://api.assemblyai.com/v2/transcript';
@@ -680,6 +680,13 @@
                 }
 
                 updateProgress(25);
+                updateLoadingText('Analyzing document topic...');
+                
+                // Get topic category from Dobby analysis
+                const documentTopic = await getTopicFromDobby(text);
+                currentTopic = documentTopic;
+                
+                updateProgress(40);
                 updateLoadingText('Generating summary...');
                 
                 // Get summary from Dobby LLM in Rick's style
@@ -687,10 +694,6 @@
                 
                 updateProgress(75);
                 updateLoadingText('Creating audio summary...');
-                
-                // Create the dialogue format with kid's question and Rick's answer
-                const documentTopic = extractTopicFromText(text);
-                currentTopic = documentTopic;
                 
                 // Set appropriate video based on topic
                 setVideoForTopic(documentTopic);
@@ -754,78 +757,83 @@
             return topic.charAt(0).toUpperCase() + topic.slice(1);
         }
 
+        async function getTopicFromDobby(text) {
+            try {
+                const response = await fetch(GET_TOPIC_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text
+                    })
+                });
+
+                if (!response.ok) {
+                    console.warn('Dobby topic analysis failed, falling back to simple extraction');
+                    return extractTopicFromText(text);
+                }
+
+                const data = await response.json();
+                const topicCategory = data.topic.toLowerCase();
+                
+                console.log('Dobby selected topic category:', topicCategory);
+                return topicCategory;
+                
+            } catch (error) {
+                console.warn('Dobby topic analysis error:', error);
+                return extractTopicFromText(text);
+            }
+        }
+
         function getTopicVideo(topic) {
             const topicLower = topic.toLowerCase();
             
-            // Video database with free, category-appropriate videos
+            // Video database with category-based mapping
             const videoDatabase = {
-                // Technology & AI - Neural network and tech visuals
-                'neural': 'https://cdn.pixabay.com/vimeo/395708615/neural-49027.mp4',
-                'network': 'https://cdn.pixabay.com/vimeo/397026938/binary-49278.mp4',
-                'artificial': 'https://cdn.pixabay.com/vimeo/397026938/binary-49278.mp4',
-                'intelligence': 'https://cdn.pixabay.com/vimeo/395708615/neural-49027.mp4',
-                'machine': 'https://cdn.pixabay.com/vimeo/397026938/binary-49278.mp4',
-                'learning': 'https://cdn.pixabay.com/vimeo/395708615/neural-49027.mp4',
-                'algorithm': 'https://cdn.pixabay.com/vimeo/397026938/binary-49278.mp4',
-                'computer': 'https://assets.mixkit.co/videos/preview/mixkit-digital-cyber-tunnel-4010-large.mp4',
-                'software': 'https://assets.mixkit.co/videos/preview/mixkit-digital-cyber-tunnel-4010-large.mp4',
-                'programming': 'https://cdn.pixabay.com/vimeo/397026938/binary-49278.mp4',
-                'code': 'https://cdn.pixabay.com/vimeo/397026938/binary-49278.mp4',
-                'data': 'https://assets.mixkit.co/videos/preview/mixkit-digital-cyber-tunnel-4010-large.mp4',
-                'database': 'https://assets.mixkit.co/videos/preview/mixkit-digital-cyber-tunnel-4010-large.mp4',
-                'technology': 'https://assets.mixkit.co/videos/preview/mixkit-digital-cyber-tunnel-4010-large.mp4',
+                // Technology & AI - Dynamic tech visuals
+                'technology & ai': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                'technology': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                'ai': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
                 
-                // Science & Nature - Scientific and nature visuals
-                'science': 'https://assets.mixkit.co/videos/preview/mixkit-dna-strand-3d-animation-4018-large.mp4',
-                'biology': 'https://assets.mixkit.co/videos/preview/mixkit-dna-strand-3d-animation-4018-large.mp4',
-                'chemistry': 'https://cdn.pixabay.com/vimeo/417656766/molecules-54842.mp4',
-                'physics': 'https://cdn.pixabay.com/vimeo/417656766/molecules-54842.mp4',
-                'nature': 'https://assets.mixkit.co/videos/preview/mixkit-ocean-waves-aerial-view-1052-large.mp4',
-                'environment': 'https://assets.mixkit.co/videos/preview/mixkit-ocean-waves-aerial-view-1052-large.mp4',
-                'climate': 'https://assets.mixkit.co/videos/preview/mixkit-ocean-waves-aerial-view-1052-large.mp4',
-                'energy': 'https://cdn.pixabay.com/vimeo/417656766/molecules-54842.mp4',
-                'research': 'https://assets.mixkit.co/videos/preview/mixkit-dna-strand-3d-animation-4018-large.mp4',
+                // Science & Nature - Nature and scientific visuals
+                'science & nature': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+                'science': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+                'nature': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
                 
-                // Business & Finance - Professional office and charts
-                'business': 'https://assets.mixkit.co/videos/preview/mixkit-business-meeting-discussion-4022-large.mp4',
-                'finance': 'https://cdn.pixabay.com/vimeo/510854263/chart-89213.mp4',
-                'economy': 'https://cdn.pixabay.com/vimeo/510854263/chart-89213.mp4',
-                'market': 'https://cdn.pixabay.com/vimeo/510854263/chart-89213.mp4',
-                'investment': 'https://cdn.pixabay.com/vimeo/510854263/chart-89213.mp4',
-                'management': 'https://assets.mixkit.co/videos/preview/mixkit-business-meeting-discussion-4022-large.mp4',
-                'strategy': 'https://assets.mixkit.co/videos/preview/mixkit-business-meeting-discussion-4022-large.mp4',
+                // Business & Finance - Professional and dynamic visuals
+                'business & finance': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+                'business': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+                'finance': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
                 
-                // Health & Medicine - Medical and health visuals
-                'health': 'https://cdn.pixabay.com/vimeo/473826330/medical-75584.mp4',
-                'medical': 'https://cdn.pixabay.com/vimeo/473826330/medical-75584.mp4',
-                'medicine': 'https://cdn.pixabay.com/vimeo/473826330/medical-75584.mp4',
-                'treatment': 'https://cdn.pixabay.com/vimeo/473826330/medical-75584.mp4',
-                'therapy': 'https://cdn.pixabay.com/vimeo/473826330/medical-75584.mp4',
-                'patient': 'https://cdn.pixabay.com/vimeo/473826330/medical-75584.mp4',
+                // Health & Medicine - Calming and medical visuals
+                'health & medicine': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+                'health': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+                'medicine': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
                 
-                // Education & Research - Books and learning
-                'education': 'https://assets.mixkit.co/videos/preview/mixkit-books-floating-in-space-4025-large.mp4',
-                'study': 'https://assets.mixkit.co/videos/preview/mixkit-books-floating-in-space-4025-large.mp4',
-                'academic': 'https://assets.mixkit.co/videos/preview/mixkit-books-floating-in-space-4025-large.mp4',
-                'university': 'https://assets.mixkit.co/videos/preview/mixkit-books-floating-in-space-4025-large.mp4',
-                'student': 'https://assets.mixkit.co/videos/preview/mixkit-books-floating-in-space-4025-large.mp4',
+                // Education & Research - Academic and learning visuals
+                'education & research': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+                'education': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+                'research': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
                 
-                // Space & Astronomy - Galaxy and space visuals
-                'space': 'https://cdn.pixabay.com/vimeo/402516056/galaxy-50890.mp4',
-                'astronomy': 'https://cdn.pixabay.com/vimeo/402516056/galaxy-50890.mp4',
-                'planet': 'https://assets.mixkit.co/videos/preview/mixkit-rotating-planet-earth-1055-large.mp4',
-                'universe': 'https://cdn.pixabay.com/vimeo/402516056/galaxy-50890.mp4',
-                'galaxy': 'https://cdn.pixabay.com/vimeo/402516056/galaxy-50890.mp4',
-                'cosmic': 'https://cdn.pixabay.com/vimeo/402516056/galaxy-50890.mp4',
+                // Space & Astronomy - Cosmic and space visuals
+                'space & astronomy': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                'space': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                'astronomy': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
                 
                 // Default fallback
                 'default': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
             };
             
-            // Check for keyword matches
-            for (const keyword in videoDatabase) {
-                if (topicLower.includes(keyword)) {
-                    return videoDatabase[keyword];
+            // Check for exact category matches first
+            if (videoDatabase[topicLower]) {
+                return videoDatabase[topicLower];
+            }
+            
+            // Fallback: check for partial matches
+            for (const category in videoDatabase) {
+                if (topicLower.includes(category) || category.includes(topicLower)) {
+                    return videoDatabase[category];
                 }
             }
             
@@ -1356,9 +1364,9 @@ function startSubtitles(audio) {
         subtitleInterval = setInterval(() => {
             const currentTime = audio.currentTime * 1000; // convert to milliseconds
             
-            // Find words that should be displayed in a window around current time
-            const windowBefore = 1500; // 1.5 seconds before
-            const windowAfter = 2500;  // 2.5 seconds after
+            // Find words that should be displayed in a smaller window around current time
+            const windowBefore = 800; // 0.8 seconds before (reduced from 1.5s)
+            const windowAfter = 1200;  // 1.2 seconds after (reduced from 2.5s)
             
             const visibleWords = wordTimestamps.filter(word => {
                 return word.start >= (currentTime - windowBefore) && 
@@ -1366,8 +1374,12 @@ function startSubtitles(audio) {
             });
             
             if (visibleWords.length > 0) {
+                // Limit to maximum 4-5 words for easier reading
+                const maxWords = 4;
+                const limitedWords = visibleWords.slice(0, maxWords);
+                
                 // Create HTML for words with timing states
-                const wordsHtml = visibleWords.map(word => {
+                const wordsHtml = limitedWords.map(word => {
                     let state = 'future';
                     if (currentTime >= word.start && currentTime <= word.end) {
                         state = 'current';
@@ -1384,7 +1396,7 @@ function startSubtitles(audio) {
                 // No words in current window
                 subtitles.style.display = 'none';
             }
-        }, 100); // Update every 100ms for smooth transitions
+        }, 150); // Update every 150ms for slower, smoother transitions
         
     } else {
         console.log('Falling back to segment-based subtitles');
@@ -1399,16 +1411,17 @@ function startSubtitles(audio) {
             if (currentSegment) {
                 // Split segment into smaller chunks for better display
                 const words = currentSegment.text.split(' ');
-                const maxWordsPerLine = 8;
+                const maxWordsPerLine = 4; // Reduced from 8 to 4 for easier reading
                 
                 if (words.length <= maxWordsPerLine) {
                     subtitles.textContent = currentSegment.text;
                 } else {
-                    // Show words progressively
+                    // Show words progressively with slower progression
                     const segmentDuration = currentSegment.end - currentSegment.start;
                     const timeInSegment = currentTime - currentSegment.start;
                     const progressRatio = timeInSegment / segmentDuration;
-                    const wordsToShow = Math.min(words.length, Math.floor(progressRatio * words.length) + maxWordsPerLine);
+                    // Slower word progression - multiply by 0.7 to slow down
+                    const wordsToShow = Math.min(words.length, Math.floor(progressRatio * words.length * 0.7) + maxWordsPerLine);
                     
                     subtitles.textContent = words.slice(Math.max(0, wordsToShow - maxWordsPerLine), wordsToShow).join(' ');
                 }
@@ -1417,7 +1430,7 @@ function startSubtitles(audio) {
             } else {
                 subtitles.style.display = 'none';
             }
-        }, 100);
+        }, 150); // Slower update interval for smoother reading
     }
 }
 
