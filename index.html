@@ -789,37 +789,37 @@
         function getTopicVideo(topic) {
             const topicLower = topic.toLowerCase();
             
-            // Video database with category-based mapping
+            // Video database with Google Drive direct URLs
             const videoDatabase = {
-                // Technology & AI - Dynamic tech visuals
-                'technology & ai': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'technology': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'ai': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                // Computer - Technology and programming
+                'computer': 'https://drive.google.com/uc?export=download&id=1kzjtYOxwpNYF1QgeBRbDYsrm2Xkh-GaY',
+                'technology': 'https://drive.google.com/uc?export=download&id=1kzjtYOxwpNYF1QgeBRbDYsrm2Xkh-GaY',
+                'programming': 'https://drive.google.com/uc?export=download&id=1kzjtYOxwpNYF1QgeBRbDYsrm2Xkh-GaY',
+                'tech': 'https://drive.google.com/uc?export=download&id=1kzjtYOxwpNYF1QgeBRbDYsrm2Xkh-GaY',
                 
-                // Science & Nature - Nature and scientific visuals
-                'science & nature': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-                'science': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-                'nature': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+                // Health - Medical and wellness
+                'health': 'https://drive.google.com/uc?export=download&id=1i4hF6Z0Ib4ChyHjluCSPffa7TSQ5m-Go',
+                'medical': 'https://drive.google.com/uc?export=download&id=1i4hF6Z0Ib4ChyHjluCSPffa7TSQ5m-Go',
+                'medicine': 'https://drive.google.com/uc?export=download&id=1i4hF6Z0Ib4ChyHjluCSPffa7TSQ5m-Go',
+                'healthcare': 'https://drive.google.com/uc?export=download&id=1i4hF6Z0Ib4ChyHjluCSPffa7TSQ5m-Go',
                 
-                // Business & Finance - Professional and dynamic visuals
-                'business & finance': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-                'business': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-                'finance': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+                // Business/Finance - Professional and financial
+                'business/finance': 'https://drive.google.com/uc?export=download&id=1hLvk6P_tn3rScDpZbl6YDArQQFmX7AbF',
+                'business': 'https://drive.google.com/uc?export=download&id=1hLvk6P_tn3rScDpZbl6YDArQQFmX7AbF',
+                'finance': 'https://drive.google.com/uc?export=download&id=1hLvk6P_tn3rScDpZbl6YDArQQFmX7AbF',
+                'economy': 'https://drive.google.com/uc?export=download&id=1hLvk6P_tn3rScDpZbl6YDArQQFmX7AbF',
                 
-                // Health & Medicine - Calming and medical visuals
-                'health & medicine': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-                'health': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-                'medicine': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+                // AI - Artificial intelligence and automation
+                'ai': 'https://drive.google.com/uc?export=download&id=1nifqZ3vCnD9Qxf2wYjpXyc-pEs2QK5qU',
+                'artificial intelligence': 'https://drive.google.com/uc?export=download&id=1nifqZ3vCnD9Qxf2wYjpXyc-pEs2QK5qU',
+                'machine learning': 'https://drive.google.com/uc?export=download&id=1nifqZ3vCnD9Qxf2wYjpXyc-pEs2QK5qU',
+                'automation': 'https://drive.google.com/uc?export=download&id=1nifqZ3vCnD9Qxf2wYjpXyc-pEs2QK5qU',
                 
-                // Education & Research - Academic and learning visuals
-                'education & research': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-                'education': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-                'research': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-                
-                // Space & Astronomy - Cosmic and space visuals
-                'space & astronomy': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'space': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'astronomy': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                // Food - Culinary and nutrition
+                'food': 'https://drive.google.com/uc?export=download&id=1bdZfudFFthXln0dlNPE-zVM2tw7B0fhJ',
+                'cooking': 'https://drive.google.com/uc?export=download&id=1bdZfudFFthXln0dlNPE-zVM2tw7B0fhJ',
+                'culinary': 'https://drive.google.com/uc?export=download&id=1bdZfudFFthXln0dlNPE-zVM2tw7B0fhJ',
+                'nutrition': 'https://drive.google.com/uc?export=download&id=1bdZfudFFthXln0dlNPE-zVM2tw7B0fhJ',
                 
                 // Default fallback
                 'default': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
