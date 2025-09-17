@@ -757,66 +757,66 @@
         function getTopicVideo(topic) {
             const topicLower = topic.toLowerCase();
             
-            // Video database with free, publicly available videos
+            // Video database with free, category-appropriate videos
             const videoDatabase = {
-                // Technology & AI - Dynamic tech visuals
-                'neural': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'network': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'artificial': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'intelligence': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'machine': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'learning': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'algorithm': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'computer': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'software': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'programming': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'code': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'data': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'database': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'technology': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                // Technology & AI - Neural network and tech visuals
+                'neural': 'https://cdn.pixabay.com/vimeo/395708615/neural-49027.mp4',
+                'network': 'https://cdn.pixabay.com/vimeo/397026938/binary-49278.mp4',
+                'artificial': 'https://cdn.pixabay.com/vimeo/397026938/binary-49278.mp4',
+                'intelligence': 'https://cdn.pixabay.com/vimeo/395708615/neural-49027.mp4',
+                'machine': 'https://cdn.pixabay.com/vimeo/397026938/binary-49278.mp4',
+                'learning': 'https://cdn.pixabay.com/vimeo/395708615/neural-49027.mp4',
+                'algorithm': 'https://cdn.pixabay.com/vimeo/397026938/binary-49278.mp4',
+                'computer': 'https://assets.mixkit.co/videos/preview/mixkit-digital-cyber-tunnel-4010-large.mp4',
+                'software': 'https://assets.mixkit.co/videos/preview/mixkit-digital-cyber-tunnel-4010-large.mp4',
+                'programming': 'https://cdn.pixabay.com/vimeo/397026938/binary-49278.mp4',
+                'code': 'https://cdn.pixabay.com/vimeo/397026938/binary-49278.mp4',
+                'data': 'https://assets.mixkit.co/videos/preview/mixkit-digital-cyber-tunnel-4010-large.mp4',
+                'database': 'https://assets.mixkit.co/videos/preview/mixkit-digital-cyber-tunnel-4010-large.mp4',
+                'technology': 'https://assets.mixkit.co/videos/preview/mixkit-digital-cyber-tunnel-4010-large.mp4',
                 
-                // Science & Nature - Nature and scientific visuals
-                'science': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-                'biology': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-                'chemistry': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-                'physics': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-                'nature': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-                'environment': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-                'climate': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-                'energy': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-                'research': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+                // Science & Nature - Scientific and nature visuals
+                'science': 'https://assets.mixkit.co/videos/preview/mixkit-dna-strand-3d-animation-4018-large.mp4',
+                'biology': 'https://assets.mixkit.co/videos/preview/mixkit-dna-strand-3d-animation-4018-large.mp4',
+                'chemistry': 'https://cdn.pixabay.com/vimeo/417656766/molecules-54842.mp4',
+                'physics': 'https://cdn.pixabay.com/vimeo/417656766/molecules-54842.mp4',
+                'nature': 'https://assets.mixkit.co/videos/preview/mixkit-ocean-waves-aerial-view-1052-large.mp4',
+                'environment': 'https://assets.mixkit.co/videos/preview/mixkit-ocean-waves-aerial-view-1052-large.mp4',
+                'climate': 'https://assets.mixkit.co/videos/preview/mixkit-ocean-waves-aerial-view-1052-large.mp4',
+                'energy': 'https://cdn.pixabay.com/vimeo/417656766/molecules-54842.mp4',
+                'research': 'https://assets.mixkit.co/videos/preview/mixkit-dna-strand-3d-animation-4018-large.mp4',
                 
-                // Business & Finance - Professional and dynamic visuals
-                'business': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-                'finance': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-                'economy': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-                'market': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-                'investment': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-                'management': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-                'strategy': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+                // Business & Finance - Professional office and charts
+                'business': 'https://assets.mixkit.co/videos/preview/mixkit-business-meeting-discussion-4022-large.mp4',
+                'finance': 'https://cdn.pixabay.com/vimeo/510854263/chart-89213.mp4',
+                'economy': 'https://cdn.pixabay.com/vimeo/510854263/chart-89213.mp4',
+                'market': 'https://cdn.pixabay.com/vimeo/510854263/chart-89213.mp4',
+                'investment': 'https://cdn.pixabay.com/vimeo/510854263/chart-89213.mp4',
+                'management': 'https://assets.mixkit.co/videos/preview/mixkit-business-meeting-discussion-4022-large.mp4',
+                'strategy': 'https://assets.mixkit.co/videos/preview/mixkit-business-meeting-discussion-4022-large.mp4',
                 
-                // Health & Medicine - Calming and medical visuals
-                'health': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-                'medical': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-                'medicine': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-                'treatment': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-                'therapy': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-                'patient': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+                // Health & Medicine - Medical and health visuals
+                'health': 'https://cdn.pixabay.com/vimeo/473826330/medical-75584.mp4',
+                'medical': 'https://cdn.pixabay.com/vimeo/473826330/medical-75584.mp4',
+                'medicine': 'https://cdn.pixabay.com/vimeo/473826330/medical-75584.mp4',
+                'treatment': 'https://cdn.pixabay.com/vimeo/473826330/medical-75584.mp4',
+                'therapy': 'https://cdn.pixabay.com/vimeo/473826330/medical-75584.mp4',
+                'patient': 'https://cdn.pixabay.com/vimeo/473826330/medical-75584.mp4',
                 
-                // Education & Research - Academic and learning visuals
-                'education': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-                'study': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-                'academic': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-                'university': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-                'student': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+                // Education & Research - Books and learning
+                'education': 'https://assets.mixkit.co/videos/preview/mixkit-books-floating-in-space-4025-large.mp4',
+                'study': 'https://assets.mixkit.co/videos/preview/mixkit-books-floating-in-space-4025-large.mp4',
+                'academic': 'https://assets.mixkit.co/videos/preview/mixkit-books-floating-in-space-4025-large.mp4',
+                'university': 'https://assets.mixkit.co/videos/preview/mixkit-books-floating-in-space-4025-large.mp4',
+                'student': 'https://assets.mixkit.co/videos/preview/mixkit-books-floating-in-space-4025-large.mp4',
                 
-                // Space & Astronomy - Cosmic and space visuals
-                'space': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'astronomy': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'planet': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'universe': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'galaxy': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'cosmic': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                // Space & Astronomy - Galaxy and space visuals
+                'space': 'https://cdn.pixabay.com/vimeo/402516056/galaxy-50890.mp4',
+                'astronomy': 'https://cdn.pixabay.com/vimeo/402516056/galaxy-50890.mp4',
+                'planet': 'https://assets.mixkit.co/videos/preview/mixkit-rotating-planet-earth-1055-large.mp4',
+                'universe': 'https://cdn.pixabay.com/vimeo/402516056/galaxy-50890.mp4',
+                'galaxy': 'https://cdn.pixabay.com/vimeo/402516056/galaxy-50890.mp4',
+                'cosmic': 'https://cdn.pixabay.com/vimeo/402516056/galaxy-50890.mp4',
                 
                 // Default fallback
                 'default': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
