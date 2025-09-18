@@ -1412,13 +1412,18 @@ function createSubtitleSegments(kidQuestion, rickResponse, kidUnderstanding) {
             // Start subtitle display using the audio player's currentTime
             startSubtitles(audioPlayer);
             
-            // Pause the video and clean up when audio finishes
+            // Return to upload page when audio finishes
             audioPlayer.onended = function() {
                 if (minecraftVideo.tagName === 'VIDEO') {
                 minecraftVideo.pause();
                 }
                 clearInterval(subtitleInterval);
                 subtitles.style.display = 'none';
+                
+                // Automatically go back to upload page after audio ends
+                setTimeout(() => {
+                    goBackToUpload();
+                }, 2000); // Wait 2 seconds before returning
             };
         }
 
